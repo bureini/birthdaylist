@@ -1,6 +1,6 @@
 {
   "appId": "com.ekukurei.birthdaylist",
   "appName": "BirthdayList",
-  "webDir": ".",
+  "webDir": "www",
   "bundledWebRuntime": false
 }
