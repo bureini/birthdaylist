@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BirthdayList - Never Forget a Birthday</title>
+    <style>
+        /* Light Theme variables */
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --badge-bg: #e0e7ff;
+        }
+
+        /* Dark Theme variables */
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --badge-bg: #312e81;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-light);
+        }
+
+        /* Theme Toggle Controls */
+        .theme-toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "☀️";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+            content: "🌙";
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            background-color: var(--card-bg);
+            color: var(--text);
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .list-header {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .birthday-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .info p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .stats {
+            text-align: right;
+            margin-right: 15px;
+            flex-grow: 1;
+        }
+
+        .age {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .countdown {
+            font-size: 0.75rem;
+            background: var(--badge-bg);
+            color: var(--primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        /* Adjust countdown colors slightly for dark mode contrast */
+        [data-theme="dark"] .countdown {
+            color: #818cf8;
+        }
+
+        .delete-btn {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            width: auto;
+            border-radius: 4px;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-light);
+            padding: 30px;
+            font-style: italic;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 40px 0 20px 0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Theme Toggle -->
+        <div class="theme-toggle-container">
+            <label class="theme-switch" aria-label="Toggle light and dark theme">
+                <input type="checkbox" id="themeCheckbox">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <header>
+            <h1>🎉 BirthdayList</h1>
+            <p>Keep track of your favorite people's big days</p>
+        </header>
+
+        <!-- Input Form Card -->
+        <div class="card">
+            <form id="birthdayForm">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="birthDate">Birth Date</label>
+                    <input type="date" id="birthDate" required>
+                </div>
+                <button type="submit">Add to List</button>
+            </form>
+        </div>
+
+        <!-- Birthday List Display -->
+        <div class="list-header">Saved Birthdays</div>
+        <div id="birthdayListContainer">
+            <!-- Dynamic list content -->
+        </div>
+
+        <!-- Footer Notice -->
+        <footer>
+            &copy; 2026 E-Kukurei. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('birthdayForm');
+            const listContainer = document.getElementById('birthdayListContainer');
+            const themeCheckbox = document.getElementById('themeCheckbox');
+
+            // --- Theme Management ---
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeCheckbox.checked = true;
+            }
+
+            themeCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // --- Birthday Management ---
+            let birthdays = JSON.parse(localStorage.getItem('birthdays')) || [];
+
+            function calculateAge(dobString) {
+                const birthDate = new Date(dobString);
+                const today = new Date();
+                
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                return age;
+            }
+
+            function daysUntilNextBirthday(dobString) {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const birthDate = new Date(dobString);
+                
+                let nextBDay = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+                
+                if (today > nextBDay) {
+                    nextBDay.setFullYear(today.getFullYear() + 1);
+                }
+                
+                const diffTime = nextBDay - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 365 || diffDays === 0) return "Today! 🎂";
+                return `${diffDays} days left`;
+            }
+
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            }
+
+            function displayBirthdays() {
+                listContainer.innerHTML = '';
+
+                if (birthdays.length === 0) {
+                    listContainer.innerHTML = '<div class="empty-state">No birthdays added yet.</div>';
+                    return;
+                }
+
+                birthdays.forEach((person, index) => {
+                    const age = calculateAge(person.date);
+                    const countdownText = daysUntilNextBirthday(person.date);
+
+                    const item = document.createElement('div');
+                    item.className = 'birthday-item';
+                    item.innerHTML = `
+                        <div class="info">
+                            <h3>${escapeHtml(person.name)}</h3>
+                            <p>📅 ${formatDate(person.date)}</p>
+                        </div>
+                        <div class="stats">
+                            <div class="age">${age} yrs old</div>
+                            <div class="countdown">${countdownText}</div>
+                        </div>
+                        <button class="delete-btn" data-index="${index}">Delete</button>
+                    `;
+                    listContainer.appendChild(item);
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = e.target.getAttribute('data-index');
+                        deleteBirthday(index);
+                    });
+                });
+            }
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nameInput = document.getElementById('fullName');
+                const dateInput = document.getElementById('birthDate');
+
+                const newPerson = {
+                    name: nameInput.value.trim(),
+                    date: dateInput.value
+                };
+
+                birthdays.push(newPerson);
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                
+                displayBirthdays();
+                form.reset();
+            });
+
+            function deleteBirthday(index) {
+                birthdays.splice(index, 1);
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                displayBirthdays();
+            }
+
+            function escapeHtml(text) {
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+
+            displayBirthdays();
+        });
+    </script>
+</body>
+</html>
