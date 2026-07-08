@@ -82,8 +82,11 @@ jobs:
           alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          # Explicitly configures the action to use the latest pre-installed build tools environment
+          BUILD_TOOLS_VERSION: "34.0.0"
 
-      # Upload the production signed APK file back to you as an artifact (Fixed syntax line)
+      # Upload the production signed APK file back to you as an artifact
       - name: Upload Finished Production APK File
         uses: actions/upload-artifact@v4
         with:
