@@ -83,8 +83,9 @@ jobs:
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
+      # Upload the production signed APK file back to you as an artifact (Fixed syntax line)
       - name: Upload Finished Production APK File
         uses: actions/upload-artifact@v4
         with:
           name: BirthdayList-Production-Signed-APK
-          path: ${{ steps:sign_app.outputs.signedReleaseFile }}
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
