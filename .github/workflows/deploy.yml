@@ -72,23 +72,25 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      # Google Requirement: Sign the binary file cryptographically using Repository Secrets
-      - name: Sign Android Release APK
-        id: sign_app
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        env:
-          # Explicitly configures the action to use the latest pre-installed build tools environment
-          BUILD_TOOLS_VERSION: "34.0.0"
+      # Decodes the keystore file back to a binary format cleanly
+      - name: Decode Keystore Binary File
+        run: |
+          echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode > android/app/release.keystore
+
+      # Explicit Native Sign Run via standard Android SDK binaries for perfect stability
+      - name: Cryptographically Sign Production APK
+        run: |
+          /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
+            --ks android/app/release.keystore \
+            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            --out android/app/build/outputs/apk/release/app-release-signed.apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
 
       # Upload the production signed APK file back to you as an artifact
       - name: Upload Finished Production APK File
         uses: actions/upload-artifact@v4
         with:
           name: BirthdayList-Production-Signed-APK
-          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          path: android/app/build/outputs/apk/release/app-release-signed.apk
