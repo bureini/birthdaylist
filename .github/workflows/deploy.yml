@@ -72,10 +72,11 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      # Decodes the keystore file back to a binary format cleanly (Added garbage immunity flag)
+      # Decodes the keystore file back to a binary format cleanly
       - name: Decode Keystore Binary File
         run: |
           echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode --ignore-garbage > android/app/release.keystore
+          ls -lh android/app/release.keystore
 
       # Explicit Native Sign Run via standard Android SDK binaries for perfect stability
       - name: Cryptographically Sign Production APK
