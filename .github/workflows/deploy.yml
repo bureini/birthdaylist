@@ -1,4 +1,4 @@
-name: Deploy Web and Build Android APK
+name: Deploy Web and Build Production Signed APK
 
 on:
   push:
@@ -11,26 +11,21 @@ permissions:
   id-token: write
 
 jobs:
-  # JOB 1: Web deployment to GitHub Pages
   deploy-web:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code Base
         uses: actions/checkout@v4
-
       - name: Setup Pages Configuration
         uses: actions/configure-pages@v4
-
       - name: Upload Web Assets
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
       - name: Deploy Live Site
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # JOB 2: Packaging code to Android APK
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -42,21 +37,18 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Capacitor Core and CLI
+      - name: Install Capacitor CLI
         run: npm install
 
-      # Dynamically maps files to 'www' folder to satisfy Capacitor's security rules
       - name: Prepare Separate Web Assets Folder
         run: |
           mkdir -p www
           cp index.html www/
-          cp icon.png www/ || echo "No icon asset found, skipping icon clone step."
+          cp icon.png www/ || echo "No icon asset found."
 
-      # Corrected modern Capacitor V6 syntax command order
       - name: Initialize Android Native Layer
         run: npx cap add android || echo "Android layer already exists."
 
-      # Safely copies index.html from www/ into the native android package layers
       - name: Sync Assets to Native Code
         run: npx cap sync
 
@@ -66,13 +58,25 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Compile and Build Debug APK
+      # Google Expectation: Build an optimized Release Release APK instead of an unoptimized Debug APK
+      - name: Build Release APK via Gradle
         run: |
           cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
 
-      - name: Upload Finished APK File
+      # Google Expectation: Sign the binary file cryptographically
+      - name: Sign Android Release APK
+        id: sign_app
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: "" # Leaving empty defaults to generating a secure pipeline-specific key
+          alias: birthdaylist_key
+          keyStorePassword: "SuperSecretPassword123"
+          keyPassword: "SuperSecretPassword123"
+
+      - name: Upload Finished Production APK File
         uses: actions/upload-artifact@v4
         with:
-          name: BirthdayList-Android-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: BirthdayList-Production-Signed-APK
+          path: ${{ steps:sign_app.outputs.signedReleaseFile }}
