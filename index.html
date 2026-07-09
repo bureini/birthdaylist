@@ -14,7 +14,7 @@
             --accent-hover: #4f46e5;
             --success: #22c55e;
             --danger: #ef4444;
-            --danger-hover: #dc2626;
+            --modal-overlay: rgba(15, 23, 42, 0.8);
         }
 
         body.light-mode {
@@ -25,6 +25,7 @@
             --accent: #4f46e5;
             --accent-hover: #4338ca;
             --success: #16a34a;
+            --modal-overlay: rgba(15, 23, 42, 0.6);
         }
 
         * {
@@ -172,6 +173,10 @@
             background-color: var(--accent-hover);
         }
 
+        button.submit-btn.edit-mode-active {
+            background-color: #f59e0b;
+        }
+
         .list-section {
             width: 100%;
             max-width: 450px;
@@ -266,10 +271,10 @@
 
         .btn-row {
             display: flex;
-            gap: 6px;
+            gap: 4px;
         }
 
-        .share-btn, .delete-btn {
+        .share-btn, .edit-btn, .delete-btn {
             padding: 6px 10px;
             font-size: 11px;
             font-weight: 600;
@@ -281,23 +286,14 @@
             white-space: nowrap;
         }
 
-        .share-btn {
-            background-color: var(--accent);
-        }
+        .share-btn { background-color: var(--accent); }
+        .share-btn:hover { background-color: var(--accent-hover); }
 
-        .share-btn:hover { 
-            background-color: var(--accent-hover); 
-        }
+        .edit-btn { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .edit-btn:hover { background-color: #f59e0b; color: white; }
 
-        .delete-btn {
-            background-color: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-        }
-
-        .delete-btn:hover {
-            background-color: var(--danger);
-            color: white;
-        }
+        .delete-btn { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .delete-btn:hover { background-color: var(--danger); color: white; }
 
         .empty-state {
             text-align: center;
@@ -305,6 +301,82 @@
             font-style: italic;
             padding: 20px;
         }
+
+        /* PREMIUM CUSTOM MODAL LAYER */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            text-align: center;
+            transform: scale(0.9);
+            transition: all 0.25s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .modal-btn.primary { background-color: var(--accent); color: white; }
+        .modal-btn.primary:hover { background-color: var(--accent-hover); }
+        .modal-btn.secondary { background-color: rgba(148, 163, 184, 0.15); color: var(--text-main); }
+        .modal-btn.secondary:hover { background-color: rgba(148, 163, 184, 0.25); }
+        .modal-btn.danger { background-color: var(--danger); color: white; }
+        .modal-btn.danger:hover { background-color: #dc2626; }
 
         .footer {
             width: 100%;
@@ -315,6 +387,22 @@
             color: var(--text-muted);
             border-top: 1px solid rgba(148, 163, 184, 0.1);
             margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .version-link {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .version-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
         }
 
         @keyframes pulse {
@@ -354,24 +442,40 @@
             <span id="fileInfo" style="display: none;">✓ Photo Selected</span>
         </div>
 
-        <button class="submit-btn" onclick="addBirthday()">Add to List</button>
+        <button class="submit-btn" id="submitBtn" onclick="addBirthday()">Add to List</button>
     </div>
 
     <div class="list-section">
         <div class="section-title-row">
             <h3 class="section-title">Saved Birthdays</h3>
-            <button class="clear-all-btn" onclick="clearAllData()">⚠️ Reset Cache</button>
+            <button class="clear-all-btn" onclick="promptClearAll()">⚠️ Reset Cache</button>
         </div>
         <div id="birthdayList" class="birthday-list">
             </div>
     </div>
 
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-card">
+            <h4 class="modal-title" id="mTitle">Notification</h4>
+            <div class="modal-body" id="mBody">Message content details render here.</div>
+            <div class="modal-actions" id="mActions">
+                </div>
+        </div>
+    </div>
+
     <div class="footer">
-        &copy; 2026 E-Kukurei. All Rights Reserved.
+        <div>&copy; 2026 E-Kukurei. All Rights Reserved.</div>
+        <div>
+            <a href="https://github.com/bureini/birthdaylist/releases" class="version-link" target="_blank">
+                Android version: v1.0.0 (Check for Updates)
+            </a>
+        </div>
     </div>
 
     <script>
         let birthdays = [];
+        let editingId = null; 
+        let currentBase64Image = "";
         
         try {
             const stored = localStorage.getItem('birthdays');
@@ -381,7 +485,6 @@
             birthdays = [];
         }
 
-        let currentBase64Image = "";
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         
         function initDropdowns() {
@@ -419,6 +522,54 @@
             if (savedSelectedDay && parseInt(savedSelectedDay) <= daysInMonth) {
                 dSel.value = savedSelectedDay;
             }
+        }
+
+        // REUSABLE CUSTOM DIALOG BOX COMPONENT SYSTEM (Replaces "This page says...")
+        function showCustomModal(title, message, type, onConfirm, onCancel = null) {
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mBody').innerText = message;
+            const actionsBox = document.getElementById('mActions');
+            actionsBox.innerHTML = '';
+
+            if (type === 'alert') {
+                const okBtn = document.createElement('button');
+                okBtn.className = 'modal-btn primary';
+                okBtn.innerText = 'OK';
+                okBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+                actionsBox.appendChild(okBtn);
+            } else if (type === 'confirm') {
+                const noBtn = document.createElement('button');
+                noBtn.className = 'modal-btn secondary';
+                noBtn.innerText = 'No';
+                noBtn.onclick = () => { closeModal(); if(onCancel) onCancel(); };
+                
+                const yesBtn = document.createElement('button');
+                yesBtn.className = 'modal-btn primary';
+                yesBtn.innerText = 'Yes';
+                yesBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+                
+                actionsBox.appendChild(noBtn);
+                actionsBox.appendChild(yesBtn);
+            } else if (type === 'danger-confirm') {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'modal-btn secondary';
+                cancelBtn.innerText = 'Cancel';
+                cancelBtn.onclick = () => { closeModal(); };
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'modal-btn danger';
+                delBtn.innerText = 'Delete';
+                delBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+                
+                actionsBox.appendChild(cancelBtn);
+                actionsBox.appendChild(delBtn);
+            }
+
+            document.getElementById('customModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.remove('active');
         }
 
         function handleFileSelect(event) {
@@ -463,36 +614,90 @@
         function launchNativeShare(name, day, month, year) {
             const dateObj = { day, month, year };
             const upcomingAge = calculateAge(dateObj) + (isToday(dateObj) ? 0 : 1);
-            const shareText = `Hey! Don't forget that it's ${name}'s ${upcomingAge}th Birthday coming up soon! 🥳🎂 Make sure to send your best wishes!`;
             
-            if (navigator.share) {
-                navigator.share({
-                    title: `Birthday Reminder: ${name}`,
-                    text: shareText,
-                    url: window.location.href
-                }).catch(() => {});
+            if (isToday(dateObj)) {
+                const shareText = `Wishing a very Happy Birthday to ${name}! 🎉 Hope your day is filled with joy, laughter, and wonderful memories. Happy ${upcomingAge}th Birthday! 🎊✨`;
+                executeShare(shareText, name);
             } else {
-                navigator.clipboard.writeText(`${shareText} (${window.location.href})`).then(() => {
-                    alert("Link copied to clipboard!");
+                // Customized Modal trigger wrapper injection
+                showCustomModal(
+                    "📅 Date Notice", 
+                    `This birthday date hasn't arrived yet. Would you like to generate a "Coming Soon" milestone reminder to your share menu anyway?`, 
+                    'confirm',
+                    () => {
+                        const shareText = `Hey! Don't forget that it's ${name}'s ${upcomingAge}th Birthday coming up soon! 🥳🎂 Make sure to send your best wishes!`;
+                        executeShare(shareText, name);
+                    }
+                );
+            }
+        }
+
+        function executeShare(text, name) {
+            if (navigator.share) {
+                navigator.share({ title: `Birthday Update: ${name}`, text: text }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCustomModal("📋 Success", "Text content cleanly copied to device clipboard!", "alert");
                 });
             }
         }
 
-        // Targeted individual entry array element deletion logic
-        function deleteBirthday(id) {
-            if (confirm("Are you sure you want to delete this birthday?")) {
-                birthdays = birthdays.filter(b => b.id !== id);
-                localStorage.setItem('birthdays', JSON.stringify(birthdays));
-                renderList();
+        // DYNAMIC IN-FORM EDIT VALUE ASSIGNMENT PROCESS LOOP
+        function editBirthday(id) {
+            const item = birthdays.find(b => b.id === id);
+            if (!item) return;
+
+            editingId = id;
+            document.getElementById('fullName').value = item.name;
+            document.getElementById('birthMonth').value = item.dateObj.month;
+            updateDays();
+            document.getElementById('birthDay').value = item.dateObj.day;
+            document.getElementById('birthYear').value = item.dateObj.year;
+            
+            if (item.photo) {
+                currentBase64Image = item.photo;
+                document.getElementById('fileInfo').style.display = 'block';
+            } else {
+                currentBase64Image = "";
+                document.getElementById('fileInfo').style.display = 'none';
             }
+
+            const subBtn = document.getElementById('submitBtn');
+            subBtn.innerText = "Save Changes";
+            subBtn.classList.add('edit-mode-active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function clearAllData() {
-            if (confirm("Clear local cache to fix the rendering state?")) {
+        function promptDelete(id) {
+            showCustomModal("🗑️ Confirm Delete", "Are you sure you want to permanently remove this birthday entry?", "danger-confirm", () => {
+                birthdays = birthdays.filter(b => b.id !== id);
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                if(editingId === id) resetFormState();
+                renderList();
+            });
+        }
+
+        function promptClearAll() {
+            showCustomModal("⚠️ Warning Reset", "This action will clear all saved data entries from your app storage. Continue?", "danger-confirm", () => {
                 localStorage.removeItem('birthdays');
                 birthdays = [];
+                resetFormState();
                 renderList();
-            }
+            });
+        }
+
+        function resetFormState() {
+            editingId = null;
+            document.getElementById('fullName').value = '';
+            document.getElementById('birthDay').value = '';
+            document.getElementById('birthMonth').value = '';
+            document.getElementById('birthYear').value = '';
+            currentBase64Image = "";
+            document.getElementById('fileInfo').style.display = 'none';
+            
+            const subBtn = document.getElementById('submitBtn');
+            subBtn.innerText = "Add to List";
+            subBtn.classList.remove('edit-mode-active');
         }
 
         function renderList() {
@@ -535,7 +740,8 @@
                             ${badgeHTML}
                             <div class="btn-row">
                                 <button class="share-btn" onclick="launchNativeShare('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})">Share</button>
-                                <button class="delete-btn" onclick="deleteBirthday('${item.id}')">🗑️</button>
+                                <button class="edit-btn" onclick="editBirthday('${item.id}')">✏️</button>
+                                <button class="delete-btn" onclick="promptDelete('${item.id}')">🗑️</button>
                             </div>
                         </div>
                     </div>
@@ -551,31 +757,33 @@
             const ySel = document.getElementById('birthYear');
 
             if (!nameInput.value.trim() || dSel.value === "" || mSel.value === "" || ySel.value === "") {
-                alert('Please enter a name and select your exact day, month, and year.');
+                showCustomModal("❌ Input Error", "Please enter a name and select your exact day, month, and year fields.", "alert");
                 return;
             }
 
-            const newEntry = {
-                id: Date.now().toString(),
-                name: nameInput.value.trim(),
-                dateObj: { 
-                    day: parseInt(dSel.value), 
-                    month: parseInt(mSel.value), 
-                    year: parseInt(ySel.value) 
-                },
-                photo: currentBase64Image
+            const targetDateObj = { 
+                day: parseInt(dSel.value), 
+                month: parseInt(mSel.value), 
+                year: parseInt(ySel.value) 
             };
 
-            birthdays.push(newEntry);
+            if (editingId !== null) {
+                // Update processing path
+                birthdays = birthdays.map(b => b.id === editingId ? { ...b, name: nameInput.value.trim(), dateObj: targetDateObj, photo: currentBase64Image } : b);
+                showCustomModal("✏️ Updated", "The birthday entry info was successfully updated!", "alert");
+            } else {
+                // Creation processing path
+                const newEntry = {
+                    id: Date.now().toString(),
+                    name: nameInput.value.trim(),
+                    dateObj: targetDateObj,
+                    photo: currentBase64Image
+                };
+                birthdays.push(newEntry);
+            }
+
             localStorage.setItem('birthdays', JSON.stringify(birthdays));
-            
-            nameInput.value = '';
-            dSel.value = '';
-            mSel.value = '';
-            ySel.value = '';
-            currentBase64Image = "";
-            document.getElementById('fileInfo').style.display = 'none';
-            
+            resetFormState();
             renderList();
         }
 
