@@ -3,444 +3,597 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BirthdayList - Never Forget a Birthday</title>
+    <title>BirthdayList</title>
     <style>
-        /* Light Theme variables */
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --border: #e2e8f0;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --success: #22c55e;
             --danger: #ef4444;
             --danger-hover: #dc2626;
-            --badge-bg: #e0e7ff;
         }
 
-        /* Dark Theme variables */
-        [data-theme="dark"] {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f1f5f9;
-            --text-light: #94a3b8;
-            --border: #334155;
-            --badge-bg: #312e81;
+        body.light-mode {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #16a34a;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
             padding: 20px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
         }
 
-        .container {
+        .header {
             width: 100%;
-            max-width: 600px;
-            margin-top: 20px;
+            max-width: 450px;
             display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            text-align: center;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
-            position: relative;
+            margin-top: 20px;
         }
 
-        header h1 {
-            color: var(--primary);
-            font-size: 2.5rem;
-            margin-bottom: 5px;
-        }
-
-        header p {
-            color: var(--text-light);
-        }
-
-        /* Theme Toggle Controls */
-        .theme-toggle-container {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 15px;
-        }
-
-        .theme-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #cbd5e1;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "☀️";
+        .brand {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            border-radius: 50%;
-            transition: .3s;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
         }
 
-        input:checked + .slider {
-            background-color: var(--primary);
+        .toggle-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
         }
 
-        input:checked + .slider:before {
-            transform: translateX(24px);
-            content: "🌙";
+        .sub-title {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: -20px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 450px;
         }
 
-        .card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 25px;
-            border: 1px solid var(--border);
+        .form-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            margin-bottom: 6px;
+            font-size: 14px;
             font-weight: 600;
-            font-size: 0.9rem;
+            margin-bottom: 8px;
         }
 
-        input[type="text"], input[type="date"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 1rem;
-            outline: none;
-            background-color: var(--card-bg);
-            color: var(--text);
-        }
-
-        input[type="text"]:focus, input[type="date"]:focus {
-            border-color: var(--primary);
-        }
-
-        button {
+        input, select {
             width: 100%;
             padding: 12px;
-            background-color: var(--primary);
+            border-radius: 8px;
+            border: 1px solid var(--text-muted);
+            background-color: transparent;
+            color: var(--text-main);
+            font-size: 16px;
+        }
+
+        select option {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+        }
+
+        body.light-mode input, body.light-mode select {
+            border: 1px solid #cbd5e1;
+        }
+
+        .split-date {
+            display: flex;
+            gap: 10px;
+        }
+
+        .split-date select {
+            flex: 1;
+        }
+
+        .file-label {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .file-label:hover {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+
+        #fileInfo {
+            display: block;
+            font-size: 12px;
+            color: var(--success);
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        button.submit-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 1rem;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button.submit-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .list-section {
+            width: 100%;
+            max-width: 450px;
+            flex-grow: 1;
+        }
+
+        .section-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .clear-all-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
         }
 
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .list-header {
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text);
+        .birthday-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 40px;
         }
 
         .birthday-item {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            background: var(--card-bg);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border: 1px solid var(--border);
-            animation: fadeIn 0.3s ease;
+            gap: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .avatar-frame {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: var(--bg-color);
+            border: 2px solid var(--accent);
+            flex-shrink: 0;
         }
 
-        .info h3 {
-            font-size: 1.1rem;
-            margin-bottom: 4px;
-        }
-
-        .info p {
-            font-size: 0.85rem;
-            color: var(--text-light);
-        }
-
-        .stats {
-            text-align: right;
-            margin-right: 15px;
+        .item-info {
             flex-grow: 1;
         }
 
-        .age {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary);
+        .item-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
         }
 
-        .countdown {
-            font-size: 0.75rem;
-            background: var(--badge-bg);
-            color: var(--primary);
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 2px;
+        .item-info p {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
-        /* Adjust countdown colors slightly for dark mode contrast */
-        [data-theme="dark"] .countdown {
-            color: #818cf8;
+        .right-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .countdown-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background-color: rgba(99, 102, 241, 0.15);
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .countdown-badge.today {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .share-btn, .delete-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .share-btn {
+            background-color: var(--accent);
+        }
+
+        .share-btn:hover { 
+            background-color: var(--accent-hover); 
         }
 
         .delete-btn {
-            background: transparent;
+            background-color: rgba(239, 68, 68, 0.15);
             color: var(--danger);
-            border: 1px solid var(--danger);
-            padding: 6px 10px;
-            font-size: 0.85rem;
-            width: auto;
-            border-radius: 4px;
         }
 
         .delete-btn:hover {
-            background: var(--danger);
+            background-color: var(--danger);
             color: white;
         }
 
         .empty-state {
             text-align: center;
-            color: var(--text-light);
-            padding: 30px;
+            color: var(--text-muted);
             font-style: italic;
+            padding: 20px;
         }
 
-        footer {
-            margin-top: auto;
-            padding: 40px 0 20px 0;
+        .footer {
+            width: 100%;
+            max-width: 450px;
             text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-light);
+            padding: 20px 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            margin-top: auto;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Theme Toggle -->
-        <div class="theme-toggle-container">
-            <label class="theme-switch" aria-label="Toggle light and dark theme">
-                <input type="checkbox" id="themeCheckbox">
-                <span class="slider"></span>
-            </label>
+    <div class="header">
+        <div class="brand">🥳 BirthdayList</div>
+        <button class="toggle-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
+    </div>
+    <div class="sub-title">Keep track of your favorite people's big days</div>
+
+    <div class="form-card">
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" placeholder="John Doe">
+        </div>
+        
+        <div class="form-group">
+            <label>Birth Date</label>
+            <div class="split-date">
+                <select id="birthDay"><option value="">Day</option></select>
+                <select id="birthMonth" onchange="updateDays()"><option value="">Month</option></select>
+                <select id="birthYear" onchange="updateDays()"><option value="">Year</option></select>
+            </div>
         </div>
 
-        <header>
-            <h1>🎉 BirthdayList</h1>
-            <p>Keep track of your favorite people's big days</p>
-        </header>
-
-        <!-- Input Form Card -->
-        <div class="card">
-            <form id="birthdayForm">
-                <div class="form-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" placeholder="John Doe" required>
-                </div>
-                <div class="form-group">
-                    <label for="birthDate">Birth Date</label>
-                    <input type="date" id="birthDate" required>
-                </div>
-                <button type="submit">Add to List</button>
-            </form>
+        <div class="form-group">
+            <label>Profile Photo</label>
+            <label for="photoFile" class="file-label">📁 Choose From Storage</label>
+            <input type="file" id="photoFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            <span id="fileInfo" style="display: none;">✓ Photo Selected</span>
         </div>
 
-        <!-- Birthday List Display -->
-        <div class="list-header">Saved Birthdays</div>
-        <div id="birthdayListContainer">
-            <!-- Dynamic list content -->
-        </div>
+        <button class="submit-btn" onclick="addBirthday()">Add to List</button>
+    </div>
 
-        <!-- Footer Notice -->
-        <footer>
-            &copy; 2026 E-Kukurei. All rights reserved.
-        </footer>
+    <div class="list-section">
+        <div class="section-title-row">
+            <h3 class="section-title">Saved Birthdays</h3>
+            <button class="clear-all-btn" onclick="clearAllData()">⚠️ Reset Cache</button>
+        </div>
+        <div id="birthdayList" class="birthday-list">
+            </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 E-Kukurei. All Rights Reserved.
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('birthdayForm');
-            const listContainer = document.getElementById('birthdayListContainer');
-            const themeCheckbox = document.getElementById('themeCheckbox');
+        let birthdays = [];
+        
+        try {
+            const stored = localStorage.getItem('birthdays');
+            birthdays = stored ? JSON.parse(stored) : [];
+            if (!Array.isArray(birthdays)) birthdays = [];
+        } catch (e) {
+            birthdays = [];
+        }
 
-            // --- Theme Management ---
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            if (currentTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                themeCheckbox.checked = true;
+        let currentBase64Image = "";
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        function initDropdowns() {
+            const mSel = document.getElementById('birthMonth');
+            const ySel = document.getElementById('birthYear');
+            
+            mSel.innerHTML = '<option value="">Month</option>';
+            monthNames.forEach((m, idx) => mSel.innerHTML += `<option value="${idx}">${m}</option>`);
+            
+            const currentYear = new Date().getFullYear();
+            ySel.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y >= currentYear - 100; y--) ySel.innerHTML += `<option value="${y}">${y}</option>`;
+            
+            updateDays();
+        }
+
+        function updateDays() {
+            const dSel = document.getElementById('birthDay');
+            const mVal = document.getElementById('birthMonth').value;
+            const yVal = document.getElementById('birthYear').value;
+            
+            const savedSelectedDay = dSel.value;
+            dSel.innerHTML = '<option value="">Day</option>';
+            
+            let daysInMonth = 31;
+            if (mVal !== "") {
+                const year = yVal !== "" ? parseInt(yVal) : 2024;
+                daysInMonth = new Date(year, parseInt(mVal) + 1, 0).getDate();
+            }
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                dSel.innerHTML += `<option value="${d}">${d}</option>`;
+            }
+            
+            if (savedSelectedDay && parseInt(savedSelectedDay) <= daysInMonth) {
+                dSel.value = savedSelectedDay;
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentBase64Image = e.target.result;
+                document.getElementById('fileInfo').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function calculateCountdown(dateObj) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const nextBirthday = new Date(today.getFullYear(), parseInt(dateObj.month), parseInt(dateObj.day));
+            if (nextBirthday < today) {
+                nextBirthday.setFullYear(today.getFullYear() + 1);
             }
 
-            themeCheckbox.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                    localStorage.setItem('theme', 'light');
-                }
-            });
+            const timeDiff = nextBirthday.getTime() - today.getTime();
+            return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        }
 
-            // --- Birthday Management ---
-            let birthdays = JSON.parse(localStorage.getItem('birthdays')) || [];
-
-            function calculateAge(dobString) {
-                const birthDate = new Date(dobString);
-                const today = new Date();
-                
-                let age = today.getFullYear() - birthDate.getFullYear();
-                const monthDiff = today.getMonth() - birthDate.getMonth();
-                
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                    age--;
-                }
-                return age;
+        function calculateAge(dateObj) {
+            const today = new Date();
+            let age = today.getFullYear() - parseInt(dateObj.year);
+            if (today.getMonth() < parseInt(dateObj.month) || (today.getMonth() === parseInt(dateObj.month) && today.getDate() < parseInt(dateObj.day))) {
+                age--;
             }
+            return age;
+        }
 
-            function daysUntilNextBirthday(dobString) {
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                const birthDate = new Date(dobString);
-                
-                let nextBDay = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
-                
-                if (today > nextBDay) {
-                    nextBDay.setFullYear(today.getFullYear() + 1);
-                }
-                
-                const diffTime = nextBDay - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays === 365 || diffDays === 0) return "Today! 🎂";
-                return `${diffDays} days left`;
-            }
+        function isToday(dateObj) {
+            const today = new Date();
+            return today.getDate() === parseInt(dateObj.day) && today.getMonth() === parseInt(dateObj.month);
+        }
 
-            function formatDate(dateString) {
-                const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
-                return new Date(dateString).toLocaleDateString(undefined, options);
-            }
-
-            function displayBirthdays() {
-                listContainer.innerHTML = '';
-
-                if (birthdays.length === 0) {
-                    listContainer.innerHTML = '<div class="empty-state">No birthdays added yet.</div>';
-                    return;
-                }
-
-                birthdays.forEach((person, index) => {
-                    const age = calculateAge(person.date);
-                    const countdownText = daysUntilNextBirthday(person.date);
-
-                    const item = document.createElement('div');
-                    item.className = 'birthday-item';
-                    item.innerHTML = `
-                        <div class="info">
-                            <h3>${escapeHtml(person.name)}</h3>
-                            <p>📅 ${formatDate(person.date)}</p>
-                        </div>
-                        <div class="stats">
-                            <div class="age">${age} yrs old</div>
-                            <div class="countdown">${countdownText}</div>
-                        </div>
-                        <button class="delete-btn" data-index="${index}">Delete</button>
-                    `;
-                    listContainer.appendChild(item);
+        function launchNativeShare(name, day, month, year) {
+            const dateObj = { day, month, year };
+            const upcomingAge = calculateAge(dateObj) + (isToday(dateObj) ? 0 : 1);
+            const shareText = `Hey! Don't forget that it's ${name}'s ${upcomingAge}th Birthday coming up soon! 🥳🎂 Make sure to send your best wishes!`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `Birthday Reminder: ${name}`,
+                    text: shareText,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(`${shareText} (${window.location.href})`).then(() => {
+                    alert("Link copied to clipboard!");
                 });
+            }
+        }
 
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const index = e.target.getAttribute('data-index');
-                        deleteBirthday(index);
-                    });
-                });
+        // Targeted individual entry array element deletion logic
+        function deleteBirthday(id) {
+            if (confirm("Are you sure you want to delete this birthday?")) {
+                birthdays = birthdays.filter(b => b.id !== id);
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                renderList();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm("Clear local cache to fix the rendering state?")) {
+                localStorage.removeItem('birthdays');
+                birthdays = [];
+                renderList();
+            }
+        }
+
+        function renderList() {
+            const listContainer = document.getElementById('birthdayList');
+            listContainer.innerHTML = '';
+
+            if (!birthdays || birthdays.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No birthdays added yet.</div>';
+                return;
             }
 
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const nameInput = document.getElementById('fullName');
-                const dateInput = document.getElementById('birthDate');
-
-                const newPerson = {
-                    name: nameInput.value.trim(),
-                    date: dateInput.value
+            const processedList = birthdays.map(b => {
+                return { 
+                    ...b, 
+                    daysRemaining: isToday(b.dateObj) ? 0 : calculateCountdown(b.dateObj),
+                    age: calculateAge(b.dateObj)
                 };
-
-                birthdays.push(newPerson);
-                localStorage.setItem('birthdays', JSON.stringify(birthdays));
-                
-                displayBirthdays();
-                form.reset();
             });
 
-            function deleteBirthday(index) {
-                birthdays.splice(index, 1);
-                localStorage.setItem('birthdays', JSON.stringify(birthdays));
-                displayBirthdays();
+            processedList.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+            processedList.forEach(item => {
+                const formattedDate = `${monthNames[parseInt(item.dateObj.month)]} ${item.dateObj.day}, ${item.dateObj.year}`;
+                const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
+
+                let badgeHTML = item.daysRemaining === 0 
+                    ? `<span class="countdown-badge today">Today! 🥳</span>` 
+                    : `<span class="countdown-badge">${item.daysRemaining} days left</span>`;
+
+                const safeName = item.name.replace(/'/g, "\\'");
+
+                const itemHTML = `
+                    <div class="birthday-item">
+                        <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
+                        <div class="item-info">
+                            <h4>${item.name}</h4>
+                            <p>${formattedDate} • Age: ${item.age}</p>
+                        </div>
+                        <div class="right-actions">
+                            ${badgeHTML}
+                            <div class="btn-row">
+                                <button class="share-btn" onclick="launchNativeShare('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})">Share</button>
+                                <button class="delete-btn" onclick="deleteBirthday('${item.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += itemHTML;
+            });
+        }
+
+        function addBirthday() {
+            const nameInput = document.getElementById('fullName');
+            const dSel = document.getElementById('birthDay');
+            const mSel = document.getElementById('birthMonth');
+            const ySel = document.getElementById('birthYear');
+
+            if (!nameInput.value.trim() || dSel.value === "" || mSel.value === "" || ySel.value === "") {
+                alert('Please enter a name and select your exact day, month, and year.');
+                return;
             }
 
-            function escapeHtml(text) {
-                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
+            const newEntry = {
+                id: Date.now().toString(),
+                name: nameInput.value.trim(),
+                dateObj: { 
+                    day: parseInt(dSel.value), 
+                    month: parseInt(mSel.value), 
+                    year: parseInt(ySel.value) 
+                },
+                photo: currentBase64Image
+            };
 
-            displayBirthdays();
-        });
+            birthdays.push(newEntry);
+            localStorage.setItem('birthdays', JSON.stringify(birthdays));
+            
+            nameInput.value = '';
+            dSel.value = '';
+            mSel.value = '';
+            ySel.value = '';
+            currentBase64Image = "";
+            document.getElementById('fileInfo').style.display = 'none';
+            
+            renderList();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeToggle');
+            body.classList.toggle('light-mode');
+            localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
+            btn.innerText = body.classList.contains('light-mode') ? '☀️' : '🌙';
+        }
+
+        if(localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('themeToggle').innerText = '☀️';
+        }
+        
+        initDropdowns();
+        renderList();
     </script>
 </body>
 </html>
