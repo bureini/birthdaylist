@@ -475,13 +475,11 @@
         let currentBase64Image = "";
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         
-        // Safety initialization wrapping logic to strip out bad properties seamlessly
         try {
             const stored = localStorage.getItem('birthdays');
             let rawList = stored ? JSON.parse(stored) : [];
             if (Array.isArray(rawList)) {
                 birthdays = rawList.map(item => {
-                    // Fix entries missing structure gracefully instead of crashing
                     if (!item.dateObj || item.dateObj.day === undefined || item.dateObj.month === undefined || item.dateObj.year === undefined) {
                         return null; 
                     }
@@ -492,16 +490,26 @@
             birthdays = [];
         }
 
+        // IMPROVED GENERAL LIST API LOOKUP FILTER (Finds both draft and automated build versions)
         async function fetchLatestAppVersion() {
             const linkElement = document.getElementById('dynamicVersionLink');
             try {
-                const response = await fetch('https://api.github.com/repos/bureini/birthdaylist/releases/latest');
+                // Queries the overall releases list instead of just the frozen "latest" hook
+                const response = await fetch('https://api.github.com/repos/bureini/birthdaylist/releases');
                 if (!response.ok) throw new Error();
+                
                 const data = await response.json();
-                linkElement.innerText = `Android version: ${data.tag_name} (Check for Updates)`;
-                linkElement.href = data.html_url;
+                
+                // If releases exist, grab item [0] (the absolute newest entry generated on your dashboard)
+                if (data && data.length > 0) {
+                    const newestRelease = data[0];
+                    linkElement.innerText = `Android version: ${newestRelease.tag_name} (Check for Updates)`;
+                    linkElement.href = newestRelease.html_url; // Direct path straight to your automated tag page asset
+                } else {
+                    throw new Error();
+                }
             } catch (error) {
-                linkElement.innerText = "Android version: v1.0.0 (View Releases)";
+                linkElement.innerText = "Android version: View Releases";
                 linkElement.href = "https://github.com/bureini/birthdaylist/releases";
             }
         }
