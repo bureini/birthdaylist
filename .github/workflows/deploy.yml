@@ -72,11 +72,10 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      # Error-Proof Decryption: Uses GPG to decrypt your uploaded file safely without base64 text parsing
-      - name: Decrypt Keystore Binary File
+      # Safely decodes your key from secrets vault into a file system block on the fly
+      - name: Decode Keystore Binary File
         run: |
-          gpg --quiet --batch --yes --decrypt --passphrase "${{ secrets.RELEASE_KEY_PASSWORD }}" \
-          --output android/app/release.keystore final_app.keystore.gpg
+          echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode --ignore-garbage > android/app/release.keystore
 
       # Explicit Native Sign Run via standard Android SDK binaries for perfect stability
       - name: Cryptographically Sign Production APK
