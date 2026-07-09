@@ -95,7 +95,7 @@ jobs:
       # AUTOMATED STEP: Instantly publishes your GitHub Release dashboard page (Only triggers on tags)
       - name: Automatically Create GitHub Release and Upload APK Asset
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/ v')  # Only fires this step if we pushed a version tag mark
+        if: startsWith(github.ref, 'refs/tags/v')  # Only fires this step if we pushed a version tag mark
         with:
           name: "Birthdaylist APK Update ${{ github.ref_name }}"
           body: |
