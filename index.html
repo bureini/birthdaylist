@@ -13,6 +13,8 @@
             --accent: #6366f1;
             --accent-hover: #4f46e5;
             --success: #22c55e;
+            --fb-color: #1877f2;
+            --fb-hover: #166fe5;
         }
 
         body.light-mode {
@@ -109,6 +111,10 @@
             font-size: 16px;
         }
 
+        body.light-mode input {
+            border: 1px solid #cbd5e1;
+        }
+
         button.submit-btn {
             width: 100%;
             padding: 14px;
@@ -148,15 +154,29 @@
             padding: 16px;
             border-radius: 12px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 14px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .avatar-frame {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: var(--bg-color);
+            border: 2px solid var(--accent);
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex-grow: 1;
         }
 
         .item-info h4 {
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .item-info p {
@@ -164,19 +184,46 @@
             color: var(--text-muted);
         }
 
+        .right-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
         .countdown-badge {
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             background-color: rgba(99, 102, 241, 0.15);
             color: var(--accent);
+            white-space: nowrap;
         }
 
         .countdown-badge.today {
             background-color: rgba(34, 197, 94, 0.15);
             color: var(--success);
             animation: pulse 2s infinite;
+        }
+
+        .wish-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            background-color: var(--fb-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .wish-btn:hover {
+            background-color: var(--fb-hover);
         }
 
         .empty-state {
@@ -207,8 +254,12 @@
             <input type="text" id="fullName" placeholder="John Doe">
         </div>
         <div class="form-group">
-            <label for="birthDate">Birth Date</label>
+            <label for="birthDate">Birth Date (Day, Month, Year)</label>
             <input type="date" id="birthDate">
+        </div>
+        <div class="form-group">
+            <label for="photoUrl">Photo URL (Optional)</label>
+            <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg">
         </div>
         <button class="submit-btn" onclick="addBirthday()">Add to List</button>
     </div>
@@ -229,20 +280,45 @@
             const birthDate = new Date(dateString);
             const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
 
-            // If the birthday has already occurred this year, target next year
             if (nextBirthday < today) {
                 nextBirthday.setFullYear(today.getFullYear() + 1);
             }
 
             const timeDiff = nextBirthday.getTime() - today.getTime();
-            const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        }
+
+        function calculateAge(dateString) {
+            const today = new Date();
+            const birthDate = new Date(dateString);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
             
-            // Check if it's an exact match for today
-            if (today.getMonth() === birthDate.getMonth() && today.getDate() === birthDate.getDate()) {
-                return 0;
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
             }
+            return age;
+        }
+
+        function isToday(dateString) {
+            const today = new Date();
+            const birthDate = new Date(dateString);
+            return today.getDate() === birthDate.getDate() && today.getMonth() === birthDate.getMonth();
+        }
+
+        function shareWishes(name, dateString) {
+            const upcomingAge = calculateAge(dateString) + (isToday(dateString) ? 0 : 1);
+            const message = `Wishing a very Happy Birthday to ${name}! 🎉🎂 Hope your day is filled with joy, laughter, and wonderful memories. Happy ${upcomingAge}th Birthday! 🎊✨`;
             
-            return daysLeft;
+            // Try Native Copying to Clipboard First
+            navigator.clipboard.writeText(message).then(() => {
+                alert("Wishes copied to clipboard! Opening Facebook so you can paste it...");
+                window.open("https://www.facebook.com/sharer/sharer.php", "_blank");
+            }).catch(() => {
+                // Fallback route if clipboard permissions are blocked on browser views
+                const encodedText = encodeURIComponent(message);
+                window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodedText}`, "_blank");
+            });
         }
 
         function renderList() {
@@ -254,16 +330,22 @@
                 return;
             }
 
-            // Calculate current countdowns and sort by closest incoming birthday
             const processedList = birthdays.map(b => {
-                return { ...b, daysRemaining: calculateCountdown(b.date) };
+                return { 
+                    ...b, 
+                    daysRemaining: isToday(b.date) ? 0 : calculateCountdown(b.date),
+                    age: calculateAge(b.date)
+                };
             });
 
             processedList.sort((a, b) => a.daysRemaining - b.daysRemaining);
 
             processedList.forEach(item => {
-                const dateOptions = { month: 'short', day: 'numeric' };
+                const dateOptions = { month: 'long', day: 'numeric', year: 'numeric' };
                 const formattedDate = new Date(item.date).toLocaleDateString('en-US', dateOptions);
+                
+                // Set default avatar icon if URL is missing or incorrect
+                const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
 
                 let badgeHTML = '';
                 if (item.daysRemaining === 0) {
@@ -274,11 +356,17 @@
 
                 const itemHTML = `
                     <div class="birthday-item">
+                        <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
                         <div class="item-info">
                             <h4>${item.name}</h4>
-                            <p>${formattedDate}</p>
+                            <p>${formattedDate} • Age: ${item.age}</p>
                         </div>
-                        ${badgeHTML}
+                        <div class="right-actions">
+                            ${badgeHTML}
+                            <button class="wish-btn" onclick="shareWishes('${item.name.replace(/'/g, "\\'")}', '${item.date}')">
+                                🔵 Wish
+                            </button>
+                        </div>
                     </div>
                 `;
                 listContainer.innerHTML += itemHTML;
@@ -288,6 +376,7 @@
         function addBirthday() {
             const nameInput = document.getElementById('fullName');
             const dateInput = document.getElementById('birthDate');
+            const photoInput = document.getElementById('photoUrl');
 
             if (!nameInput.value || !dateInput.value) {
                 alert('Please enter both a name and a valid date.');
@@ -297,14 +386,16 @@
             const newEntry = {
                 id: Date.now().toString(),
                 name: nameInput.value,
-                date: dateInput.value
+                date: dateInput.value,
+                photo: photoInput.value
             };
 
             birthdays.push(newEntry);
-            localStorage.setItem('birthdays', JSON.parse(JSON.stringify(birthdays)));
+            localStorage.setItem('birthdays', JSON.stringify(birthdays));
             
             nameInput.value = '';
             dateInput.value = '';
+            photoInput.value = '';
             
             renderList();
         }
@@ -323,7 +414,6 @@
             }
         }
 
-        // Initialize App
         if(localStorage.getItem('theme') === 'light') {
             document.body.classList.add('light-mode');
             document.getElementById('themeToggle').innerText = '☀️';
