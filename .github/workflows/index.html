@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BirthdayList</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --modal-overlay: rgba(15, 23, 42, 0.8);
+        }
+
+        body.light-mode {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #16a34a;
+            --modal-overlay: rgba(15, 23, 42, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .sub-title {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: -20px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .form-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--text-muted);
+            background-color: transparent;
+            color: var(--text-main);
+            font-size: 16px;
+        }
+
+        select option {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+        }
+
+        body.light-mode input, body.light-mode select {
+            border: 1px solid #cbd5e1;
+        }
+
+        .split-date {
+            display: flex;
+            gap: 10px;
+        }
+
+        .split-date select {
+            flex: 1;
+        }
+
+        .file-label {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .file-label:hover {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+
+        #fileInfo {
+            display: block;
+            font-size: 12px;
+            color: var(--success);
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        button.submit-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button.submit-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.submit-btn.edit-mode-active {
+            background-color: #f59e0b;
+        }
+
+        .list-section {
+            width: 100%;
+            max-width: 450px;
+            flex-grow: 1;
+        }
+
+        .section-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .clear-all-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .birthday-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .birthday-item {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .avatar-frame {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: var(--bg-color);
+            border: 2px solid var(--accent);
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex-grow: 1;
+        }
+
+        .item-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .item-info p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .right-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .countdown-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background-color: rgba(99, 102, 241, 0.15);
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .countdown-badge.today {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 4px;
+        }
+
+        .share-btn, .edit-btn, .delete-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .share-btn { background-color: var(--accent); }
+        .share-btn:hover { background-color: var(--accent-hover); }
+
+        .edit-btn { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .edit-btn:hover { background-color: #f59e0b; color: white; }
+
+        .delete-btn { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .delete-btn:hover { background-color: var(--danger); color: white; }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            text-align: center;
+            transform: scale(0.9);
+            transition: all 0.25s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .modal-btn.primary { background-color: var(--accent); color: white; }
+        .modal-btn.primary:hover { background-color: var(--accent-hover); }
+        .modal-btn.secondary { background-color: rgba(148, 163, 184, 0.15); color: var(--text-main); }
+        .modal-btn.secondary:hover { background-color: rgba(148, 163, 184, 0.25); }
+        .modal-btn.danger { background-color: var(--danger); color: white; }
+        .modal-btn.danger:hover { background-color: #dc2626; }
+
+        .footer {
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .version-link {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .version-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand">🥳 BirthdayList</div>
+        <button class="toggle-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
+    </div>
+    <div class="sub-title">Keep track of your favorite people's big days</div>
+
+    <div class="form-card">
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" placeholder="John Doe">
+        </div>
+        
+        <div class="form-group">
+            <label>Birth Date</label>
+            <div class="split-date">
+                <select id="birthDay"><option value="">Day</option></select>
+                <select id="birthMonth" onchange="updateDays()"><option value="">Month</option></select>
+                <select id="birthYear" onchange="updateDays()"><option value="">Year</option></select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Profile Photo</label>
+            <label for="photoFile" class="file-label">📁 Choose From Storage</label>
+            <input type="file" id="photoFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            <span id="fileInfo" style="display: none;">✓ Photo Selected</span>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="addBirthday()">Add to List</button>
+    </div>
+
+    <div class="list-section">
+        <div class="section-title-row">
+            <h3 class="section-title">Saved Birthdays</h3>
+            <button class="clear-all-btn" onclick="promptClearAll()">⚠️ Reset Cache</button>
+        </div>
+        <div id="birthdayList" class="birthday-list"></div>
+    </div>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-card">
+            <h4 class="modal-title" id="mTitle">Notification</h4>
+            <div class="modal-body" id="mBody">Message content details render here.</div>
+            <div class="modal-actions" id="mActions"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>&copy; 2026 E-Kukurei. All Rights Reserved.</div>
+        <div>
+            <a href="https://github.com/bureini/birthdaylist/releases" class="version-link" id="dynamicVersionLink" target="_blank">
+                Android version: Checking version...
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let birthdays = [];
+        let editingId = null; 
+        let currentBase64Image = "";
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        // Safety initialization wrapping logic to strip out bad properties seamlessly
+        try {
+            const stored = localStorage.getItem('birthdays');
+            let rawList = stored ? JSON.parse(stored) : [];
+            if (Array.isArray(rawList)) {
+                birthdays = rawList.map(item => {
+                    // Fix entries missing structure gracefully instead of crashing
+                    if (!item.dateObj || item.dateObj.day === undefined || item.dateObj.month === undefined || item.dateObj.year === undefined) {
+                        return null; 
+                    }
+                    return item;
+                }).filter(Boolean);
+            }
+        } catch (e) {
+            birthdays = [];
+        }
+
+        async function fetchLatestAppVersion() {
+            const linkElement = document.getElementById('dynamicVersionLink');
+            try {
+                const response = await fetch('https://api.github.com/repos/bureini/birthdaylist/releases/latest');
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                linkElement.innerText = `Android version: ${data.tag_name} (Check for Updates)`;
+                linkElement.href = data.html_url;
+            } catch (error) {
+                linkElement.innerText = "Android version: v1.0.0 (View Releases)";
+                linkElement.href = "https://github.com/bureini/birthdaylist/releases";
+            }
+        }
+
+        function initDropdowns() {
+            const mSel = document.getElementById('birthMonth');
+            const ySel = document.getElementById('birthYear');
+            
+            mSel.innerHTML = '<option value="">Month</option>';
+            monthNames.forEach((m, idx) => mSel.innerHTML += `<option value="${idx}">${m}</option>`);
+            
+            const currentYear = new Date().getFullYear();
+            ySel.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y >= currentYear - 100; y--) ySel.innerHTML += `<option value="${y}">${y}</option>`;
+            
+            updateDays();
+        }
+
+        function updateDays() {
+            const dSel = document.getElementById('birthDay');
+            const mVal = document.getElementById('birthMonth').value;
+            const yVal = document.getElementById('birthYear').value;
+            
+            const savedSelectedDay = dSel.value;
+            dSel.innerHTML = '<option value="">Day</option>';
+            
+            let daysInMonth = 31;
+            if (mVal !== "") {
+                const year = yVal !== "" ? parseInt(yVal) : 2024;
+                daysInMonth = new Date(year, parseInt(mVal) + 1, 0).getDate();
+            }
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                dSel.innerHTML += `<option value="${d}">${d}</option>`;
+            }
+            
+            if (savedSelectedDay && parseInt(savedSelectedDay) <= daysInMonth) {
+                dSel.value = savedSelectedDay;
+            }
+        }
+
+        function showCustomModal(title, message, type, onConfirm, onCancel = null) {
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mBody').innerText = message;
+            const actionsBox = document.getElementById('mActions');
+            actionsBox.innerHTML = '';
+
+            if (type === 'alert') {
+                const okBtn = document.createElement('button');
+                okBtn.className = 'modal-btn primary';
+                okBtn.innerText = 'OK';
+                okBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+                actionsBox.appendChild(okBtn);
+            } else if (type === 'confirm') {
+                const noBtn = document.createElement('button');
+                noBtn.className = 'modal-btn secondary';
+                noBtn.innerText = 'No';
+                noBtn.onclick = () => { closeModal(); if(onCancel) onCancel(); };
+                
+                const yesBtn = document.createElement('button');
+                yesBtn.className = 'modal-btn primary';
+                yesBtn.innerText = 'Yes';
+                yesBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+                
+                actionsBox.appendChild(noBtn);
+                actionsBox.appendChild(yesBtn);
+            } else if (type === 'danger-confirm') {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'modal-btn secondary';
+                cancelBtn.innerText = 'Cancel';
+                cancelBtn.onclick = () => { closeModal(); };
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'modal-btn danger';
+                delBtn.innerText = 'Delete';
+                delBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+                
+                actionsBox.appendChild(cancelBtn);
+                actionsBox.appendChild(delBtn);
+            }
+
+            document.getElementById('customModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.remove('active');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentBase64Image = e.target.result;
+                document.getElementById('fileInfo').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function calculateCountdown(dateObj) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const nextBirthday = new Date(today.getFullYear(), parseInt(dateObj.month), parseInt(dateObj.day));
+            if (nextBirthday < today) {
+                nextBirthday.setFullYear(today.getFullYear() + 1);
+            }
+
+            const timeDiff = nextBirthday.getTime() - today.getTime();
+            return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        }
+
+        function calculateAge(dateObj) {
+            const today = new Date();
+            let age = today.getFullYear() - parseInt(dateObj.year);
+            if (today.getMonth() < parseInt(dateObj.month) || (today.getMonth() === parseInt(dateObj.month) && today.getDate() < parseInt(dateObj.day))) {
+                age--;
+            }
+            return age;
+        }
+
+        function isToday(dateObj) {
+            const today = new Date();
+            return today.getDate() === parseInt(dateObj.day) && today.getMonth() === parseInt(dateObj.month);
+        }
+
+        function launchNativeShare(name, day, month, year) {
+            const dateObj = { day, month, year };
+            const upcomingAge = calculateAge(dateObj) + (isToday(dateObj) ? 0 : 1);
+            
+            if (isToday(dateObj)) {
+                const shareText = `Wishing a very Happy Birthday to ${name}! 🎉 Hope your day is filled with joy, laughter, and wonderful memories. Happy ${upcomingAge}th Birthday! 🎊✨`;
+                executeShare(shareText, name);
+            } else {
+                showCustomModal(
+                    "📅 Date Notice", 
+                    `This birthday date hasn't arrived yet. Would you like to generate a "Coming Soon" milestone reminder to your share menu anyway?`, 
+                    'confirm',
+                    () => {
+                        const shareText = `Hey! Don't forget that it's ${name}'s ${upcomingAge}th Birthday coming up soon! 🥳🎂 Make sure to send your best wishes!`;
+                        executeShare(shareText, name);
+                    }
+                );
+            }
+        }
+
+        function executeShare(text, name) {
+            if (navigator.share) {
+                navigator.share({ title: `Birthday Update: ${name}`, text: text }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCustomModal("📋 Success", "Text content cleanly copied to device clipboard!", "alert");
+                });
+            }
+        }
+
+        function editBirthday(id) {
+            const item = birthdays.find(b => b.id === id);
+            if (!item) return;
+
+            editingId = id;
+            document.getElementById('fullName').value = item.name;
+            document.getElementById('birthMonth').value = item.dateObj.month;
+            updateDays();
+            document.getElementById('birthDay').value = item.dateObj.day;
+            document.getElementById('birthYear').value = item.dateObj.year;
+            
+            if (item.photo) {
+                currentBase64Image = item.photo;
+                document.getElementById('fileInfo').style.display = 'block';
+            } else {
+                currentBase64Image = "";
+                document.getElementById('fileInfo').style.display = 'none';
+            }
+
+            const subBtn = document.getElementById('submitBtn');
+            subBtn.innerText = "Save Changes";
+            subBtn.classList.add('edit-mode-active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function promptDelete(id) {
+            showCustomModal("🗑️ Confirm Delete", "Are you sure you want to permanently remove this birthday entry?", "danger-confirm", () => {
+                birthdays = birthdays.filter(b => b.id !== id);
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                if(editingId === id) resetFormState();
+                renderList();
+            });
+        }
+
+        function promptClearAll() {
+            showCustomModal("⚠️ Warning Reset", "This action will clear all saved data entries from your app storage. Continue?", "danger-confirm", () => {
+                localStorage.removeItem('birthdays');
+                birthdays = [];
+                resetFormState();
+                renderList();
+            });
+        }
+
+        function resetFormState() {
+            editingId = null;
+            document.getElementById('fullName').value = '';
+            document.getElementById('birthDay').value = '';
+            document.getElementById('birthMonth').value = '';
+            document.getElementById('birthYear').value = '';
+            currentBase64Image = "";
+            document.getElementById('fileInfo').style.display = 'none';
+            
+            const subBtn = document.getElementById('submitBtn');
+            subBtn.innerText = "Add to List";
+            subBtn.classList.remove('edit-mode-active');
+        }
+
+        function renderList() {
+            const listContainer = document.getElementById('birthdayList');
+            listContainer.innerHTML = '';
+
+            if (!birthdays || birthdays.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No birthdays added yet.</div>';
+                return;
+            }
+
+            const processedList = birthdays.map(b => {
+                return { 
+                    ...b, 
+                    daysRemaining: isToday(b.dateObj) ? 0 : calculateCountdown(b.dateObj),
+                    age: calculateAge(b.dateObj)
+                };
+            });
+
+            processedList.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+            processedList.forEach(item => {
+                const formattedDate = `${monthNames[parseInt(item.dateObj.month)]} ${item.dateObj.day}, ${item.dateObj.year}`;
+                const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
+
+                let badgeHTML = item.daysRemaining === 0 
+                    ? `<span class="countdown-badge today">Today! 🥳</span>` 
+                    : `<span class="countdown-badge">${item.daysRemaining} days left</span>`;
+
+                const safeName = item.name.replace(/'/g, "\\'");
+
+                const itemHTML = `
+                    <div class="birthday-item">
+                        <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
+                        <div class="item-info">
+                            <h4>${item.name}</h4>
+                            <p>${formattedDate} • Age: ${item.age}</p>
+                        </div>
+                        <div class="right-actions">
+                            ${badgeHTML}
+                            <div class="btn-row">
+                                <button class="share-btn" onclick="launchNativeShare('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})">Share</button>
+                                <button class="edit-btn" onclick="editBirthday('${item.id}')">✏️</button>
+                                <button class="delete-btn" onclick="promptDelete('${item.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += itemHTML;
+            });
+        }
+
+        function addBirthday() {
+            const nameInput = document.getElementById('fullName');
+            const dSel = document.getElementById('birthDay');
+            const mSel = document.getElementById('birthMonth');
+            const ySel = document.getElementById('birthYear');
+
+            if (!nameInput.value.trim() || dSel.value === "" || mSel.value === "" || ySel.value === "") {
+                showCustomModal("❌ Input Error", "Please enter a name and select your exact day, month, and year fields.", "alert");
+                return;
+            }
+
+            const targetDateObj = { 
+                day: parseInt(dSel.value), 
+                month: parseInt(mSel.value), 
+                year: parseInt(ySel.value)
+            };
+
+            if (editingId !== null) {
+                birthdays = birthdays.map(b => b.id === editingId ? { ...b, name: nameInput.value.trim(), dateObj: targetDateObj, photo: currentBase64Image } : b);
+                showCustomModal("✏️ Updated", "The birthday entry info was successfully updated!", "alert");
+            } else {
+                const newEntry = {
+                    id: Date.now().toString(),
+                    name: nameInput.value.trim(),
+                    dateObj: targetDateObj,
+                    photo: currentBase64Image
+                };
+                birthdays.push(newEntry);
+            }
+
+            localStorage.setItem('birthdays', JSON.stringify(birthdays));
+            resetFormState();
+            renderList();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeToggle');
+            body.classList.toggle('light-mode');
+            localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
+            btn.innerText = body.classList.contains('light-mode') ? '☀️' : '🌙';
+        }
+
+        if(localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('themeToggle').innerText = '☀️';
+        }
+        
+        initDropdowns();
+        renderList();
+        fetchLatestAppVersion();
+    </script>
+</body>
+</html>
