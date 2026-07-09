@@ -72,19 +72,19 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      # Safely decodes your key from secrets vault into a file system block on the fly
+      # Decodes the keystore file back to a binary format cleanly
       - name: Decode Keystore Binary File
         run: |
           echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode --ignore-garbage > android/app/release.keystore
 
-      # Explicit Native Sign Run via standard Android SDK binaries for perfect stability
+      # Hardcoded configuration to eliminate secret variable mismatches completely
       - name: Cryptographically Sign Production APK
         run: |
           /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
             --ks android/app/release.keystore \
-            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
-            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            --ks-key-alias "bday_alias" \
+            --ks-pass pass:"Bureini2026" \
+            --key-pass pass:"Bureini2026" \
             --out android/app/build/outputs/apk/release/app-release-signed.apk \
             android/app/build/outputs/apk/release/app-release-unsigned.apk
 
