@@ -1,16 +1,19 @@
-name: Troubleshoot Production Signing Pipeline
+name: Deploy Web and Build Production Signed APK
 
 on:
   push:
     branches:
-      - troubleshoot-signing
+      - main  # Deploys your web app on regular main branch pushes
+    tags:
+      - 'v*'  # Triggers the automatic GitHub Release page whenever you push a tag like v1.0.1
 
 permissions:
-  contents: write
+  contents: write  # Crucial: Gives your pipeline permission to publish a release page and push assets
   pages: write
   id-token: write
 
 jobs:
+  # JOB 1: Web deployment to GitHub Pages
   deploy-web:
     runs-on: ubuntu-latest
     steps:
@@ -26,6 +29,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+  # JOB 2: Packaging code, generating keystore, signing, and auto-releasing
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +60,7 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      # Automatically generates a fresh key inside the runner container instance
+      # Automated Step: Generate a fresh, valid keystore directly on the GitHub server
       - name: Generate Fresh Keystore on the Fly
         run: |
           mkdir -p android/app
@@ -70,7 +74,7 @@ jobs:
             -keypass "Bureini2026" \
             -dname "CN=Bureini, OU=Development, O=BirthdayList, L=Tarawa, C=KI"
 
-      # Signs the application layout directly
+      # Cryptographically Sign the APK using the newly generated key file
       - name: Cryptographically Sign Production APK
         run: |
           /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
@@ -78,11 +82,25 @@ jobs:
             --ks-key-alias "bday_alias" \
             --ks-pass pass:"Bureini2026" \
             --key-pass pass:"Bureini2026" \
-            --out android/app/build/outputs/apk/release/app-release-signed.apk \
+            --out android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk \
             android/app/build/outputs/apk/release/app-release-unsigned.apk
 
-      - name: Upload Finished Production APK File
+      # Upload raw file artifact back into our summary log interface
+      - name: Upload Finished Production APK File Artifact
         uses: actions/upload-artifact@v4
         with:
           name: BirthdayList-Production-Signed-APK
-          path: android/app/build/outputs/apk/release/app-release-signed.apk
+          path: android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk
+
+      # AUTOMATED STEP: Instantly publishes your GitHub Release dashboard page (Only triggers on tags)
+      - name: Automatically Create GitHub Release and Upload APK Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/ v')  # Only fires this step if we pushed a version tag mark
+        with:
+          name: "Birthdaylist APK Update ${{ github.ref_name }}"
+          body: |
+            ### 🚀 New Production Build Published Automatically!
+            - Automatically compiled and signed using the latest main repository snapshot.
+            - View structural updates and test out changes instantly via our live web panel channel dashboard!
+          files: android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk
+          generate_release_notes: true
