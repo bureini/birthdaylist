@@ -1,0 +1,106 @@
+name: Deploy Web and Build Production Signed APK
+
+on:
+  push:
+    branches:
+      - main  # Deploys your web app on regular main branch pushes
+    tags:
+      - 'v*'  # Triggers the automatic GitHub Release page whenever you push a tag like v1.0.1
+
+permissions:
+  contents: write  # Crucial: Gives your pipeline permission to publish a release page and push assets
+  pages: write
+  id-token: write
+
+jobs:
+  # JOB 1: Web deployment to GitHub Pages
+  deploy-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Base
+        uses: actions/checkout@v4
+      - name: Setup Pages Configuration
+        uses: actions/configure-pages@v4
+      - name: Upload Web Assets
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy Live Site
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # JOB 2: Packaging code, generating keystore, signing, and auto-releasing
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Base
+        uses: actions/checkout@v4
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Capacitor CLI
+        run: npm install
+      - name: Prepare Separate Web Assets Folder
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp icon.png www/ || echo "No icon asset found."
+      - name: Initialize Android Native Layer
+        run: npx cap add android || echo "Android layer already configured."
+      - name: Sync Assets to Native Code
+        run: npx cap sync
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Build Release APK via Gradle
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      # Automated Step: Generate a fresh, valid keystore directly on the GitHub server
+      - name: Generate Fresh Keystore on the Fly
+        run: |
+          mkdir -p android/app
+          keytool -genkey -v \
+            -keystore android/app/release.keystore \
+            -alias "bday_alias" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "Bureini2026" \
+            -keypass "Bureini2026" \
+            -dname "CN=Bureini, OU=Development, O=BirthdayList, L=Tarawa, C=KI"
+
+      # Cryptographically Sign the APK using the newly generated key file
+      - name: Cryptographically Sign Production APK
+        run: |
+          /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
+            --ks android/app/release.keystore \
+            --ks-key-alias "bday_alias" \
+            --ks-pass pass:"Bureini2026" \
+            --key-pass pass:"Bureini2026" \
+            --out android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+      # Upload raw file artifact back into our summary log interface
+      - name: Upload Finished Production APK File Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BirthdayList-Production-Signed-APK
+          path: android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk
+
+      # AUTOMATED STEP: Instantly publishes your GitHub Release dashboard page (Only triggers on tags)
+      - name: Automatically Create GitHub Release and Upload APK Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/ v')  # Only fires this step if we pushed a version tag mark
+        with:
+          name: "Birthdaylist APK Update ${{ github.ref_name }}"
+          body: |
+            ### 🚀 New Production Build Published Automatically!
+            - Automatically compiled and signed using the latest main repository snapshot.
+            - View structural updates and test out changes instantly via our live web panel channel dashboard!
+          files: android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk
+          generate_release_notes: true
