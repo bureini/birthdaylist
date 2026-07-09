@@ -13,8 +13,8 @@
             --accent: #6366f1;
             --accent-hover: #4f46e5;
             --success: #22c55e;
-            --fb-color: #1877f2;
-            --fb-hover: #166fe5;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
         }
 
         body.light-mode {
@@ -101,7 +101,7 @@
             margin-bottom: 8px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 12px;
             border-radius: 8px;
@@ -111,8 +111,48 @@
             font-size: 16px;
         }
 
-        body.light-mode input {
+        select option {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+        }
+
+        body.light-mode input, body.light-mode select {
             border: 1px solid #cbd5e1;
+        }
+
+        .split-date {
+            display: flex;
+            gap: 10px;
+        }
+
+        .split-date select {
+            flex: 1;
+        }
+
+        .file-label {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .file-label:hover {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+
+        #fileInfo {
+            display: block;
+            font-size: 12px;
+            color: var(--success);
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 600;
         }
 
         button.submit-btn {
@@ -135,18 +175,35 @@
         .list-section {
             width: 100%;
             max-width: 450px;
+            flex-grow: 1;
+        }
+
+        .section-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
         }
 
         .section-title {
             font-size: 18px;
             font-weight: 700;
-            margin-bottom: 16px;
+        }
+
+        .clear-all-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         .birthday-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            margin-bottom: 40px;
         }
 
         .birthday-item {
@@ -188,7 +245,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 8px;
+            gap: 6px;
         }
 
         .countdown-badge {
@@ -207,23 +264,39 @@
             animation: pulse 2s infinite;
         }
 
-        .wish-btn {
+        .btn-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .share-btn, .delete-btn {
             padding: 6px 10px;
             font-size: 11px;
             font-weight: 600;
-            background-color: var(--fb-color);
-            color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            color: white;
+            white-space: nowrap;
         }
 
-        .wish-btn:hover {
-            background-color: var(--fb-hover);
+        .share-btn {
+            background-color: var(--accent);
+        }
+
+        .share-btn:hover { 
+            background-color: var(--accent-hover); 
+        }
+
+        .delete-btn {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .delete-btn:hover {
+            background-color: var(--danger);
+            color: white;
         }
 
         .empty-state {
@@ -231,6 +304,17 @@
             color: var(--text-muted);
             font-style: italic;
             padding: 20px;
+        }
+
+        .footer {
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            margin-top: auto;
         }
 
         @keyframes pulse {
@@ -253,33 +337,107 @@
             <label for="fullName">Full Name</label>
             <input type="text" id="fullName" placeholder="John Doe">
         </div>
+        
         <div class="form-group">
-            <label for="birthDate">Birth Date (Day, Month, Year)</label>
-            <input type="date" id="birthDate">
+            <label>Birth Date</label>
+            <div class="split-date">
+                <select id="birthDay"><option value="">Day</option></select>
+                <select id="birthMonth" onchange="updateDays()"><option value="">Month</option></select>
+                <select id="birthYear" onchange="updateDays()"><option value="">Year</option></select>
+            </div>
         </div>
+
         <div class="form-group">
-            <label for="photoUrl">Photo URL (Optional)</label>
-            <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg">
+            <label>Profile Photo</label>
+            <label for="photoFile" class="file-label">📁 Choose From Storage</label>
+            <input type="file" id="photoFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            <span id="fileInfo" style="display: none;">✓ Photo Selected</span>
         </div>
+
         <button class="submit-btn" onclick="addBirthday()">Add to List</button>
     </div>
 
     <div class="list-section">
-        <h3 class="section-title">Saved Birthdays</h3>
+        <div class="section-title-row">
+            <h3 class="section-title">Saved Birthdays</h3>
+            <button class="clear-all-btn" onclick="clearAllData()">⚠️ Reset Cache</button>
+        </div>
         <div id="birthdayList" class="birthday-list">
             </div>
     </div>
 
-    <script>
-        let birthdays = JSON.parse(localStorage.getItem('birthdays')) || [];
+    <div class="footer">
+        &copy; 2026 E-Kukurei. All Rights Reserved.
+    </div>
 
-        function calculateCountdown(dateString) {
+    <script>
+        let birthdays = [];
+        
+        try {
+            const stored = localStorage.getItem('birthdays');
+            birthdays = stored ? JSON.parse(stored) : [];
+            if (!Array.isArray(birthdays)) birthdays = [];
+        } catch (e) {
+            birthdays = [];
+        }
+
+        let currentBase64Image = "";
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        function initDropdowns() {
+            const mSel = document.getElementById('birthMonth');
+            const ySel = document.getElementById('birthYear');
+            
+            mSel.innerHTML = '<option value="">Month</option>';
+            monthNames.forEach((m, idx) => mSel.innerHTML += `<option value="${idx}">${m}</option>`);
+            
+            const currentYear = new Date().getFullYear();
+            ySel.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y >= currentYear - 100; y--) ySel.innerHTML += `<option value="${y}">${y}</option>`;
+            
+            updateDays();
+        }
+
+        function updateDays() {
+            const dSel = document.getElementById('birthDay');
+            const mVal = document.getElementById('birthMonth').value;
+            const yVal = document.getElementById('birthYear').value;
+            
+            const savedSelectedDay = dSel.value;
+            dSel.innerHTML = '<option value="">Day</option>';
+            
+            let daysInMonth = 31;
+            if (mVal !== "") {
+                const year = yVal !== "" ? parseInt(yVal) : 2024;
+                daysInMonth = new Date(year, parseInt(mVal) + 1, 0).getDate();
+            }
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                dSel.innerHTML += `<option value="${d}">${d}</option>`;
+            }
+            
+            if (savedSelectedDay && parseInt(savedSelectedDay) <= daysInMonth) {
+                dSel.value = savedSelectedDay;
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentBase64Image = e.target.result;
+                document.getElementById('fileInfo').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function calculateCountdown(dateObj) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            const birthDate = new Date(dateString);
-            const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
-
+            const nextBirthday = new Date(today.getFullYear(), parseInt(dateObj.month), parseInt(dateObj.day));
             if (nextBirthday < today) {
                 nextBirthday.setFullYear(today.getFullYear() + 1);
             }
@@ -288,44 +446,60 @@
             return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
         }
 
-        function calculateAge(dateString) {
+        function calculateAge(dateObj) {
             const today = new Date();
-            const birthDate = new Date(dateString);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            let age = today.getFullYear() - parseInt(dateObj.year);
+            if (today.getMonth() < parseInt(dateObj.month) || (today.getMonth() === parseInt(dateObj.month) && today.getDate() < parseInt(dateObj.day))) {
                 age--;
             }
             return age;
         }
 
-        function isToday(dateString) {
+        function isToday(dateObj) {
             const today = new Date();
-            const birthDate = new Date(dateString);
-            return today.getDate() === birthDate.getDate() && today.getMonth() === birthDate.getMonth();
+            return today.getDate() === parseInt(dateObj.day) && today.getMonth() === parseInt(dateObj.month);
         }
 
-        function shareWishes(name, dateString) {
-            const upcomingAge = calculateAge(dateString) + (isToday(dateString) ? 0 : 1);
-            const message = `Wishing a very Happy Birthday to ${name}! 🎉🎂 Hope your day is filled with joy, laughter, and wonderful memories. Happy ${upcomingAge}th Birthday! 🎊✨`;
+        function launchNativeShare(name, day, month, year) {
+            const dateObj = { day, month, year };
+            const upcomingAge = calculateAge(dateObj) + (isToday(dateObj) ? 0 : 1);
+            const shareText = `Hey! Don't forget that it's ${name}'s ${upcomingAge}th Birthday coming up soon! 🥳🎂 Make sure to send your best wishes!`;
             
-            // Try Native Copying to Clipboard First
-            navigator.clipboard.writeText(message).then(() => {
-                alert("Wishes copied to clipboard! Opening Facebook so you can paste it...");
-                window.open("https://www.facebook.com/sharer/sharer.php", "_blank");
-            }).catch(() => {
-                // Fallback route if clipboard permissions are blocked on browser views
-                const encodedText = encodeURIComponent(message);
-                window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodedText}`, "_blank");
-            });
+            if (navigator.share) {
+                navigator.share({
+                    title: `Birthday Reminder: ${name}`,
+                    text: shareText,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(`${shareText} (${window.location.href})`).then(() => {
+                    alert("Link copied to clipboard!");
+                });
+            }
+        }
+
+        // Targeted individual entry array element deletion logic
+        function deleteBirthday(id) {
+            if (confirm("Are you sure you want to delete this birthday?")) {
+                birthdays = birthdays.filter(b => b.id !== id);
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                renderList();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm("Clear local cache to fix the rendering state?")) {
+                localStorage.removeItem('birthdays');
+                birthdays = [];
+                renderList();
+            }
         }
 
         function renderList() {
             const listContainer = document.getElementById('birthdayList');
             listContainer.innerHTML = '';
 
-            if (birthdays.length === 0) {
+            if (!birthdays || birthdays.length === 0) {
                 listContainer.innerHTML = '<div class="empty-state">No birthdays added yet.</div>';
                 return;
             }
@@ -333,26 +507,22 @@
             const processedList = birthdays.map(b => {
                 return { 
                     ...b, 
-                    daysRemaining: isToday(b.date) ? 0 : calculateCountdown(b.date),
-                    age: calculateAge(b.date)
+                    daysRemaining: isToday(b.dateObj) ? 0 : calculateCountdown(b.dateObj),
+                    age: calculateAge(b.dateObj)
                 };
             });
 
             processedList.sort((a, b) => a.daysRemaining - b.daysRemaining);
 
             processedList.forEach(item => {
-                const dateOptions = { month: 'long', day: 'numeric', year: 'numeric' };
-                const formattedDate = new Date(item.date).toLocaleDateString('en-US', dateOptions);
-                
-                // Set default avatar icon if URL is missing or incorrect
+                const formattedDate = `${monthNames[parseInt(item.dateObj.month)]} ${item.dateObj.day}, ${item.dateObj.year}`;
                 const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
 
-                let badgeHTML = '';
-                if (item.daysRemaining === 0) {
-                    badgeHTML = `<span class="countdown-badge today">Today! 🥳</span>`;
-                } else {
-                    badgeHTML = `<span class="countdown-badge">${item.daysRemaining} days left</span>`;
-                }
+                let badgeHTML = item.daysRemaining === 0 
+                    ? `<span class="countdown-badge today">Today! 🥳</span>` 
+                    : `<span class="countdown-badge">${item.daysRemaining} days left</span>`;
+
+                const safeName = item.name.replace(/'/g, "\\'");
 
                 const itemHTML = `
                     <div class="birthday-item">
@@ -363,9 +533,10 @@
                         </div>
                         <div class="right-actions">
                             ${badgeHTML}
-                            <button class="wish-btn" onclick="shareWishes('${item.name.replace(/'/g, "\\'")}', '${item.date}')">
-                                🔵 Wish
-                            </button>
+                            <div class="btn-row">
+                                <button class="share-btn" onclick="launchNativeShare('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})">Share</button>
+                                <button class="delete-btn" onclick="deleteBirthday('${item.id}')">🗑️</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -375,27 +546,35 @@
 
         function addBirthday() {
             const nameInput = document.getElementById('fullName');
-            const dateInput = document.getElementById('birthDate');
-            const photoInput = document.getElementById('photoUrl');
+            const dSel = document.getElementById('birthDay');
+            const mSel = document.getElementById('birthMonth');
+            const ySel = document.getElementById('birthYear');
 
-            if (!nameInput.value || !dateInput.value) {
-                alert('Please enter both a name and a valid date.');
+            if (!nameInput.value.trim() || dSel.value === "" || mSel.value === "" || ySel.value === "") {
+                alert('Please enter a name and select your exact day, month, and year.');
                 return;
             }
 
             const newEntry = {
                 id: Date.now().toString(),
-                name: nameInput.value,
-                date: dateInput.value,
-                photo: photoInput.value
+                name: nameInput.value.trim(),
+                dateObj: { 
+                    day: parseInt(dSel.value), 
+                    month: parseInt(mSel.value), 
+                    year: parseInt(ySel.value) 
+                },
+                photo: currentBase64Image
             };
 
             birthdays.push(newEntry);
             localStorage.setItem('birthdays', JSON.stringify(birthdays));
             
             nameInput.value = '';
-            dateInput.value = '';
-            photoInput.value = '';
+            dSel.value = '';
+            mSel.value = '';
+            ySel.value = '';
+            currentBase64Image = "";
+            document.getElementById('fileInfo').style.display = 'none';
             
             renderList();
         }
@@ -404,20 +583,16 @@
             const body = document.body;
             const btn = document.getElementById('themeToggle');
             body.classList.toggle('light-mode');
-            
-            if(body.classList.contains('light-mode')) {
-                btn.innerText = '☀️';
-                localStorage.setItem('theme', 'light');
-            } else {
-                btn.innerText = '🌙';
-                localStorage.setItem('theme', 'dark');
-            }
+            localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
+            btn.innerText = body.classList.contains('light-mode') ? '☀️' : '🌙';
         }
 
         if(localStorage.getItem('theme') === 'light') {
             document.body.classList.add('light-mode');
             document.getElementById('themeToggle').innerText = '☀️';
         }
+        
+        initDropdowns();
         renderList();
     </script>
 </body>
