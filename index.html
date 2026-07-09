@@ -302,7 +302,6 @@
             padding: 20px;
         }
 
-        /* PREMIUM CUSTOM MODAL LAYER */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -450,24 +449,22 @@
             <h3 class="section-title">Saved Birthdays</h3>
             <button class="clear-all-btn" onclick="promptClearAll()">⚠️ Reset Cache</button>
         </div>
-        <div id="birthdayList" class="birthday-list">
-            </div>
+        <div id="birthdayList" class="birthday-list"></div>
     </div>
 
     <div class="modal-overlay" id="customModal">
         <div class="modal-card">
             <h4 class="modal-title" id="mTitle">Notification</h4>
             <div class="modal-body" id="mBody">Message content details render here.</div>
-            <div class="modal-actions" id="mActions">
-                </div>
+            <div class="modal-actions" id="mActions"></div>
         </div>
     </div>
 
     <div class="footer">
         <div>&copy; 2026 E-Kukurei. All Rights Reserved.</div>
         <div>
-            <a href="https://github.com/bureini/birthdaylist/releases" class="version-link" target="_blank">
-                Android version: v1.0.0 (Check for Updates)
+            <a href="https://github.com/bureini/birthdaylist/releases" class="version-link" id="dynamicVersionLink" target="_blank">
+                Android version: Checking version...
             </a>
         </div>
     </div>
@@ -476,17 +473,47 @@
         let birthdays = [];
         let editingId = null; 
         let currentBase64Image = "";
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         
         try {
             const stored = localStorage.getItem('birthdays');
-            birthdays = stored ? JSON.parse(stored) : [];
-            if (!Array.isArray(birthdays)) birthdays = [];
+            let rawList = stored ? JSON.parse(stored) : [];
+            if (Array.isArray(rawList)) {
+                birthdays = rawList.map(item => {
+                    if (!item.dateObj || item.dateObj.day === undefined || item.dateObj.month === undefined || item.dateObj.year === undefined) {
+                        return null; 
+                    }
+                    return item;
+                }).filter(Boolean);
+            }
         } catch (e) {
             birthdays = [];
         }
 
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        
+        // IMPROVED GENERAL LIST API LOOKUP FILTER (Finds both draft and automated build versions)
+        async function fetchLatestAppVersion() {
+            const linkElement = document.getElementById('dynamicVersionLink');
+            try {
+                // Queries the overall releases list instead of just the frozen "latest" hook
+                const response = await fetch('https://api.github.com/repos/bureini/birthdaylist/releases');
+                if (!response.ok) throw new Error();
+                
+                const data = await response.json();
+                
+                // If releases exist, grab item [0] (the absolute newest entry generated on your dashboard)
+                if (data && data.length > 0) {
+                    const newestRelease = data[0];
+                    linkElement.innerText = `Android version: ${newestRelease.tag_name} (Check for Updates)`;
+                    linkElement.href = newestRelease.html_url; // Direct path straight to your automated tag page asset
+                } else {
+                    throw new Error();
+                }
+            } catch (error) {
+                linkElement.innerText = "Android version: View Releases";
+                linkElement.href = "https://github.com/bureini/birthdaylist/releases";
+            }
+        }
+
         function initDropdowns() {
             const mSel = document.getElementById('birthMonth');
             const ySel = document.getElementById('birthYear');
@@ -524,7 +551,6 @@
             }
         }
 
-        // REUSABLE CUSTOM DIALOG BOX COMPONENT SYSTEM (Replaces "This page says...")
         function showCustomModal(title, message, type, onConfirm, onCancel = null) {
             document.getElementById('mTitle').innerText = title;
             document.getElementById('mBody').innerText = message;
@@ -619,7 +645,6 @@
                 const shareText = `Wishing a very Happy Birthday to ${name}! 🎉 Hope your day is filled with joy, laughter, and wonderful memories. Happy ${upcomingAge}th Birthday! 🎊✨`;
                 executeShare(shareText, name);
             } else {
-                // Customized Modal trigger wrapper injection
                 showCustomModal(
                     "📅 Date Notice", 
                     `This birthday date hasn't arrived yet. Would you like to generate a "Coming Soon" milestone reminder to your share menu anyway?`, 
@@ -642,7 +667,6 @@
             }
         }
 
-        // DYNAMIC IN-FORM EDIT VALUE ASSIGNMENT PROCESS LOOP
         function editBirthday(id) {
             const item = birthdays.find(b => b.id === id);
             if (!item) return;
@@ -764,15 +788,13 @@
             const targetDateObj = { 
                 day: parseInt(dSel.value), 
                 month: parseInt(mSel.value), 
-                year: parseInt(ySel.value) 
+                year: parseInt(ySel.value)
             };
 
             if (editingId !== null) {
-                // Update processing path
                 birthdays = birthdays.map(b => b.id === editingId ? { ...b, name: nameInput.value.trim(), dateObj: targetDateObj, photo: currentBase64Image } : b);
                 showCustomModal("✏️ Updated", "The birthday entry info was successfully updated!", "alert");
             } else {
-                // Creation processing path
                 const newEntry = {
                     id: Date.now().toString(),
                     name: nameInput.value.trim(),
@@ -802,6 +824,7 @@
         
         initDropdowns();
         renderList();
+        fetchLatestAppVersion();
     </script>
 </body>
 </html>
