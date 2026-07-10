@@ -1,0 +1,100 @@
+name: Code Quality & Logic Testing
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    name: Validate JS Syntax & Date Logic
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Execute Extraction & Unit Tests
+        run: |
+          node -e "
+          const fs = require('fs');
+          const assert = require('assert');
+
+          try {
+            const htmlContent = fs.readFileSync('index.html', 'utf8');
+            const scriptBlock = htmlContent.match(/<script>([\s\S]*?)<\/script>/);
+            
+            if (!scriptBlock || !scriptBlock[1]) {
+              throw new Error('No <script> tag or logic found in index.html');
+            }
+
+            // 1. Mock the browser environment basics so the script doesn't crash on load
+            const mockLocalStorage = {
+              getItem: () => null,
+              setItem: () => {}
+            };
+            
+            const mockDocument = {
+              body: { classList: { add: () => {}, toggle: () => {} } },
+              getElementById: () => ({ 
+                appendChild: () => {}, 
+                innerHTML: '', 
+                innerText: '',
+                style: {},
+                classList: { add: () => {}, remove: () => {} }
+              })
+            };
+
+            // 2. Create an isolated evaluation sandbox context (binding methods to 'this')
+            const scriptToRun = scriptBlock[1] + '\n' + 
+              'this.calculateCountdown = calculateCountdown;\n' +
+              'this.calculateAge = calculateAge;\n' +
+              'this.isToday = isToday;';
+            
+            // 3. Compile and execute inside a dedicated context binder
+            const runner = new Function('localStorage', 'document', 'window', 'fetch', scriptToRun);
+            const contextScope = {};
+            
+            // Run the script using contextScope as 'this'
+            runner.call(contextScope, mockLocalStorage, mockDocument, {}, () => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }));
+
+            const { calculateCountdown, calculateAge } = contextScope;
+            
+            if (!calculateAge || !calculateCountdown) {
+              throw new Error('Functions failed to properly bind to test context target scope.');
+            }
+
+            console.log('✅ Syntax compilation passed successfully.');
+
+            // 4. UNIT TEST ASSERTIONS
+            console.log('🏃 Running logical math assertions...');
+
+            // Test Case 1: Age calculation logic validation
+            const birthDate = { day: 15, month: 4, year: 2000 }; 
+            const calculatedAge = calculateAge(birthDate);
+            
+            assert.ok(typeof calculatedAge === 'number', 'Age must be a numeric value');
+            console.log('✅ Age Calculation Test Passed.');
+
+            // Test Case 2: Countdown validation structural test
+            const upcomingDate = { day: 31, month: 11, year: 2000 }; 
+            const daysLeft = calculateCountdown(upcomingDate);
+            
+            assert.ok(daysLeft >= 0 && daysLeft <= 366, 'Countdown must yield valid calendar range days left');
+            console.log('✅ Countdown Range Test Passed.');
+
+            console.log('🎉 All standalone logic unit tests passed flawlessly!');
+          } catch (error) {
+            console.error('❌ Pipeline Validation Failed!');
+            console.error(error.message || error);
+            process.exit(1);
+          }
+          "
