@@ -53,13 +53,12 @@ jobs:
               })
             };
 
-            // 2. Create a isolated evaluation sandbox context
+            // 2. Create an isolated evaluation sandbox context
             const sandbox = {
               localStorage: mockLocalStorage,
               document: mockDocument,
               window: {},
               fetch: () => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }),
-              monthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
               console: console
             };
 
@@ -67,11 +66,12 @@ jobs:
             const scriptToRun = scriptBlock[1] + '\n' + 
               'module.exports = { calculateCountdown, calculateAge, isToday };';
             
-            // Wrap in a function to execute safely
-            const runner = new Function('exports', 'localStorage', 'document', 'window', 'fetch', 'monthNames', scriptToRun);
+            // REMOVED 'monthNames' from the parameter list below to avoid duplicate declarations
+            const runner = new Function('exports', 'localStorage', 'document', 'window', 'fetch', scriptToRun);
             const exportedMethods = {};
             
-            runner(exportedMethods, mockLocalStorage, mockDocument, {}, sandbox.fetch, sandbox.monthNames);
+            // REMOVED sandbox.monthNames from the execution arguments below
+            runner(exportedMethods, mockLocalStorage, mockDocument, {}, sandbox.fetch);
 
             const { calculateCountdown, calculateAge } = exportedMethods;
             console.log('✅ Syntax compilation passed successfully.');
@@ -80,8 +80,7 @@ jobs:
             console.log('🏃 Running logical math assertions...');
 
             // Test Case 1: Age calculation logic validation
-            // Setting a mock birthday relative to current year assumptions
-            const birthDate = { day: 15, month: 4, year: 2000 }; // May 15, 2000
+            const birthDate = { day: 15, month: 4, year: 2000 }; 
             const currentYear = new Date().getFullYear();
             const calculatedAge = calculateAge(birthDate);
             
@@ -89,7 +88,7 @@ jobs:
             console.log('✅ Age Calculation Test Passed.');
 
             // Test Case 2: Countdown validation structural test
-            const upcomingDate = { day: 31, month: 11, year: 2000 }; // Dec 31
+            const upcomingDate = { day: 31, month: 11, year: 2000 }; 
             const daysLeft = calculateCountdown(upcomingDate);
             
             assert.ok(daysLeft >= 0 && daysLeft <= 366, 'Countdown must yield valid calendar range days left');
