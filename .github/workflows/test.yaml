@@ -53,27 +53,25 @@ jobs:
               })
             };
 
-            // 2. Create an isolated evaluation sandbox context
-            const sandbox = {
-              localStorage: mockLocalStorage,
-              document: mockDocument,
-              window: {},
-              fetch: () => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }),
-              console: console
-            };
-
-            // 3. Inject and run the file script variables into our sandbox context
+            // 2. Create an isolated evaluation sandbox context (binding methods to 'this')
             const scriptToRun = scriptBlock[1] + '\n' + 
-              'module.exports = { calculateCountdown, calculateAge, isToday };';
+              'this.calculateCountdown = calculateCountdown;\n' +
+              'this.calculateAge = calculateAge;\n' +
+              'this.isToday = isToday;';
             
-            // REMOVED 'monthNames' from the parameter list below to avoid duplicate declarations
-            const runner = new Function('exports', 'localStorage', 'document', 'window', 'fetch', scriptToRun);
-            const exportedMethods = {};
+            // 3. Compile and execute inside a dedicated context binder
+            const runner = new Function('localStorage', 'document', 'window', 'fetch', scriptToRun);
+            const contextScope = {};
             
-            // REMOVED sandbox.monthNames from the execution arguments below
-            runner(exportedMethods, mockLocalStorage, mockDocument, {}, sandbox.fetch);
+            // Run the script using contextScope as 'this'
+            runner.call(contextScope, mockLocalStorage, mockDocument, {}, () => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }));
 
-            const { calculateCountdown, calculateAge } = exportedMethods;
+            const { calculateCountdown, calculateAge } = contextScope;
+            
+            if (!calculateAge || !calculateCountdown) {
+              throw new Error('Functions failed to properly bind to test context target scope.');
+            }
+
             console.log('✅ Syntax compilation passed successfully.');
 
             // 4. UNIT TEST ASSERTIONS
@@ -81,7 +79,6 @@ jobs:
 
             // Test Case 1: Age calculation logic validation
             const birthDate = { day: 15, month: 4, year: 2000 }; 
-            const currentYear = new Date().getFullYear();
             const calculatedAge = calculateAge(birthDate);
             
             assert.ok(typeof calculatedAge === 'number', 'Age must be a numeric value');
@@ -97,7 +94,7 @@ jobs:
             console.log('🎉 All standalone logic unit tests passed flawlessly!');
           } catch (error) {
             console.error('❌ Pipeline Validation Failed!');
-            console.error(error);
+            console.error(error.message || error);
             process.exit(1);
           }
           "
