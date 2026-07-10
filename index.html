@@ -647,7 +647,7 @@
         </div>
 
         <div class="sort-info-bar">
-            <span>✨ Ordered Alphabetically (A-Z)</span>
+            <span>📅 Ordered by Upcoming Date</span>
             <span id="totalCount">Count: 0</span>
         </div>
         <div id="birthdayList" class="birthday-list"></div>
@@ -781,7 +781,7 @@
             }
 
             let matches = birthdays.filter(item => item.name.toLowerCase().includes(searchVal));
-            matches.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
+            matches.sort((a, b) => isToday(a.dateObj) ? -1 : isToday(b.dateObj) ? 1 : calculateCountdown(a.dateObj) - calculateCountdown(b.dateObj));
 
             dropdown.innerHTML = '';
             if (matches.length === 0) {
@@ -862,15 +862,8 @@
             
             try {
                 const dataStr = localStorage.getItem('birthdays');
-                const file = new File([dataStr], 'birthday-list-backup.json', { type: 'application/json' });
                 
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    navigator.share({
-                        files: [file],
-                        title: 'BirthdayList Offline Backup',
-                        text: 'Offline JSON backup for your BirthdayList layout system.'
-                    }).catch(() => {});
-                } else {
+                const executeDownloadFallback = () => {
                     const blob = new Blob([dataStr], { type: "application/json" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -881,6 +874,23 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                     showCustomModal("💾 Downloaded", "Backup file downloaded to local storage. Save this to any secure drive container.", "alert");
+                };
+
+                if (navigator.canShare && navigator.share) {
+                    const file = new File([dataStr], 'birthday-list-backup.json', { type: 'application/json' });
+                    if (navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: 'BirthdayList Offline Backup',
+                            text: 'Offline JSON backup for your BirthdayList layout system.'
+                        }).catch(() => {
+                            executeDownloadFallback();
+                        });
+                    } else {
+                        executeDownloadFallback();
+                    }
+                } else {
+                    executeDownloadFallback();
                 }
             } catch (err) {
                 showCustomModal("❌ Backup Error", "Your browser setup encountered a file parsing error.", "alert");
@@ -1102,7 +1112,13 @@
             }
 
             let displayList = [...birthdays];
-            displayList.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
+            
+            // Sort by nearest upcoming birthday date (ascending countdown)
+            displayList.sort((a, b) => {
+                if (isToday(a.dateObj)) return -1;
+                if (isToday(b.dateObj)) return 1;
+                return calculateCountdown(a.dateObj) - calculateCountdown(b.dateObj);
+            });
 
             displayList.forEach((item, index) => {
                 const formattedDate = `${monthNames[parseInt(item.dateObj.month)]} ${item.dateObj.day}, ${item.dateObj.year}`;
