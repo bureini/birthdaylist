@@ -15,6 +15,8 @@
             --success: #22c55e;
             --danger: #ef4444;
             --modal-overlay: rgba(15, 23, 42, 0.8);
+            --menu-bg: #1e293b;
+            --input-border: #475569;
         }
 
         body.light-mode {
@@ -26,6 +28,8 @@
             --accent-hover: #4338ca;
             --success: #16a34a;
             --modal-overlay: rgba(15, 23, 42, 0.6);
+            --menu-bg: #ffffff;
+            --input-border: #cbd5e1;
         }
 
         * {
@@ -54,12 +58,79 @@
             align-items: center;
             margin-bottom: 30px;
             margin-top: 20px;
+            position: relative;
         }
 
-        .brand {
+        .menu-container {
+            position: relative;
+        }
+
+        .menu-trigger {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-main);
+            padding: 4px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .menu-trigger:hover {
+            background-color: rgba(148, 163, 184, 0.15);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: var(--menu-bg);
+            min-width: 250px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            padding: 6px;
+            z-index: 500;
+            margin-top: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .dropdown-menu.active {
+            display: flex;
+        }
+
+        .menu-item {
             display: flex;
             align-items: center;
             gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+        }
+
+        .menu-item.danger-item {
+            color: var(--danger);
+        }
+        .menu-item.danger-item:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .brand {
             font-size: 24px;
             font-weight: 700;
         }
@@ -106,7 +177,7 @@
             width: 100%;
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid var(--text-muted);
+            border: 1px solid var(--input-border);
             background-color: transparent;
             color: var(--text-main);
             font-size: 16px;
@@ -115,10 +186,6 @@
         select option {
             background-color: var(--card-bg);
             color: var(--text-main);
-        }
-
-        body.light-mode input, body.light-mode select {
-            border: 1px solid #cbd5e1;
         }
 
         .split-date {
@@ -195,13 +262,78 @@
             font-weight: 700;
         }
 
-        .clear-all-btn {
+        .search-container {
+            margin-bottom: 16px;
+            width: 100%;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid var(--input-border);
+            background-color: var(--card-bg);
+            color: var(--text-main);
+        }
+
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--menu-bg);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 600;
+            margin-top: 4px;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .search-dropdown.active {
+            display: flex;
+        }
+
+        .search-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: var(--text-main);
             background: none;
             border: none;
-            color: var(--danger);
-            font-size: 12px;
-            font-weight: 600;
+            width: 100%;
+            text-align: left;
             cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+        }
+
+        .search-dropdown-item:hover {
+            background-color: rgba(99, 102, 241, 0.15);
+        }
+
+        .search-dropdown-empty {
+            padding: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            font-style: italic;
+            font-size: 13px;
+        }
+
+        .sort-info-bar {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
         }
 
         .birthday-list {
@@ -211,19 +343,49 @@
             margin-bottom: 40px;
         }
 
+        /* THREE-ZONE STRATIFIED LIST ITEM DESIGN */
         .birthday-item {
             background-color: var(--card-bg);
             padding: 16px;
             border-radius: 12px;
             display: flex;
-            align-items: center;
-            gap: 14px;
+            flex-direction: column; 
+            gap: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.4s ease, transform 0.2s;
+        }
+
+        .birthday-item.highlighted-card {
+            background-color: rgba(99, 102, 241, 0.25);
+            transform: scale(1.02);
+            border: 1px solid var(--accent);
+        }
+
+        /* Top Row Container: Number, Photo, FullName */
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .index-badge {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--accent);
+            background-color: rgba(99, 102, 241, 0.1);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+            flex-shrink: 0;
         }
 
         .avatar-frame {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
             background-color: var(--bg-color);
@@ -231,36 +393,43 @@
             flex-shrink: 0;
         }
 
-        .item-info {
-            flex-grow: 1;
-        }
-
-        .item-info h4 {
+        .card-top h4 {
             font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 2px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+            flex-grow: 1;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
-        .item-info p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .right-actions {
+        /* Middle Area Container: Birthday Date - Age & Status */
+        .card-middle {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
             gap: 6px;
+            padding-left: 36px; 
+        }
+
+        .card-middle p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .countdown-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 700;
             background-color: rgba(99, 102, 241, 0.15);
             color: var(--accent);
             white-space: nowrap;
+            display: inline-block;
         }
 
         .countdown-badge.today {
@@ -269,13 +438,19 @@
             animation: pulse 2s infinite;
         }
 
-        .btn-row {
+        /* Bottom Row Actions Container: Icon Buttons */
+        .card-bottom {
             display: flex;
-            gap: 4px;
+            justify-content: flex-start;
+            gap: 8px;
+            padding-left: 36px;
+            margin-top: 4px;
+            border-top: 1px solid rgba(148, 163, 184, 0.08);
+            padding-top: 10px;
         }
 
-        .share-btn, .edit-btn, .delete-btn {
-            padding: 6px 10px;
+        .share-btn, .cal-btn, .edit-btn, .delete-btn {
+            padding: 6px 12px;
             font-size: 11px;
             font-weight: 600;
             border: none;
@@ -283,11 +458,16 @@
             cursor: pointer;
             transition: background-color 0.2s;
             color: white;
-            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .share-btn { background-color: var(--accent); }
         .share-btn:hover { background-color: var(--accent-hover); }
+
+        .cal-btn { background-color: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .cal-btn:hover { background-color: var(--success); color: white; }
 
         .edit-btn { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; }
         .edit-btn:hover { background-color: #f59e0b; color: white; }
@@ -411,9 +591,21 @@
         }
     </style>
 </head>
-<body>
+<body onclick="closeAllDropdowns(event)">
 
     <div class="header">
+        <div class="menu-container">
+            <button class="menu-trigger" onclick="toggleDropdownMenu(event)">☰</button>
+            <div class="dropdown-menu" id="actionsMenu">
+                <button class="menu-item" onclick="exportAllToGoogleCalendar()">📅 Add All to Google Calendar</button>
+                <button class="menu-item" onclick="backupDataToCloud()">💾 Cloud Backup Offline File</button>
+                <button class="menu-item" onclick="triggerOfflineImport()">📥 Import Offline JSON Backup</button>
+                <button class="menu-item danger-item" onclick="promptClearAll()">⚠️ Reset Cache</button>
+            </div>
+        </div>
+
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleOfflineImportFile(event)">
+
         <div class="brand">🥳 BirthdayList</div>
         <button class="toggle-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
     </div>
@@ -447,7 +639,16 @@
     <div class="list-section">
         <div class="section-title-row">
             <h3 class="section-title">Saved Birthdays</h3>
-            <button class="clear-all-btn" onclick="promptClearAll()">⚠️ Reset Cache</button>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Type a name to search..." oninput="handleSearchTyping()" onclick="event.stopPropagation()">
+            <div id="searchDropdown" class="search-dropdown"></div>
+        </div>
+
+        <div class="sort-info-bar">
+            <span>✨ Ordered Alphabetically (A-Z)</span>
+            <span id="totalCount">Count: 0</span>
         </div>
         <div id="birthdayList" class="birthday-list"></div>
     </div>
@@ -490,21 +691,66 @@
             birthdays = [];
         }
 
-        // IMPROVED GENERAL LIST API LOOKUP FILTER (Finds both draft and automated build versions)
+        function showCustomModal(title, message, type, confirmCallback = null) {
+            const modal = document.getElementById('customModal');
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mBody').innerText = message;
+            
+            const actionsContainer = document.getElementById('mActions');
+            actionsContainer.innerHTML = '';
+
+            if (type === 'alert') {
+                actionsContainer.innerHTML = `<button class="modal-btn primary" onclick="closeCustomModal()">OK</button>`;
+            } else if (type === 'confirm') {
+                const yesBtn = document.createElement('button');
+                yesBtn.className = 'modal-btn primary';
+                yesBtn.innerText = 'Yes';
+                yesBtn.onclick = () => { confirmCallback(); closeCustomModal(); };
+                
+                const noBtn = document.createElement('button');
+                noBtn.className = 'modal-btn secondary';
+                noBtn.innerText = 'Cancel';
+                noBtn.onclick = closeCustomModal;
+
+                actionsContainer.appendChild(noBtn);
+                actionsContainer.appendChild(yesBtn);
+            } else if (type === 'danger-confirm') {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'modal-btn danger';
+                deleteBtn.innerText = 'Delete';
+                deleteBtn.onclick = () => { confirmCallback(); closeCustomModal(); };
+
+                const noBtn = document.createElement('button');
+                noBtn.className = 'modal-btn secondary';
+                noBtn.innerText = 'Cancel';
+                noBtn.onclick = closeCustomModal;
+
+                actionsContainer.appendChild(noBtn);
+                actionsContainer.appendChild(deleteBtn);
+            }
+            modal.classList.add('active');
+        }
+
+        function closeCustomModal() {
+            document.getElementById('customModal').classList.remove('active');
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-mode');
+            document.getElementById('themeToggle').innerText = isLight ? '☀️' : '🌙';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
         async function fetchLatestAppVersion() {
             const linkElement = document.getElementById('dynamicVersionLink');
             try {
-                // Queries the overall releases list instead of just the frozen "latest" hook
                 const response = await fetch('https://api.github.com/repos/bureini/birthdaylist/releases');
                 if (!response.ok) throw new Error();
-                
                 const data = await response.json();
-                
-                // If releases exist, grab item [0] (the absolute newest entry generated on your dashboard)
                 if (data && data.length > 0) {
                     const newestRelease = data[0];
                     linkElement.innerText = `Android version: ${newestRelease.tag_name} (Check for Updates)`;
-                    linkElement.href = newestRelease.html_url; // Direct path straight to your automated tag page asset
+                    linkElement.href = newestRelease.html_url;
                 } else {
                     throw new Error();
                 }
@@ -512,6 +758,173 @@
                 linkElement.innerText = "Android version: View Releases";
                 linkElement.href = "https://github.com/bureini/birthdaylist/releases";
             }
+        }
+
+        function toggleDropdownMenu(event) {
+            event.stopPropagation();
+            document.getElementById('actionsMenu').classList.toggle('active');
+        }
+
+        function closeAllDropdowns(event) {
+            document.getElementById('actionsMenu').classList.remove('active');
+            document.getElementById('searchDropdown').classList.remove('active');
+        }
+
+        function handleSearchTyping() {
+            const dropdown = document.getElementById('searchDropdown');
+            const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+            
+            if (!searchVal) {
+                dropdown.innerHTML = '';
+                dropdown.classList.remove('active');
+                return;
+            }
+
+            let matches = birthdays.filter(item => item.name.toLowerCase().includes(searchVal));
+            matches.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
+
+            dropdown.innerHTML = '';
+            if (matches.length === 0) {
+                dropdown.innerHTML = '<div class="search-dropdown-empty">No names match...</div>';
+            } else {
+                matches.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.className = 'search-dropdown-item';
+                    const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
+                    
+                    btn.innerHTML = `
+                        <img src="${userPhoto}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
+                        <span>${item.name}</span>
+                    `;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        scrollToAndHighlightCard(item.id);
+                        document.getElementById('searchInput').value = '';
+                        dropdown.classList.remove('active');
+                    };
+                    dropdown.appendChild(btn);
+                });
+            }
+            dropdown.classList.add('active');
+        }
+
+        function scrollToAndHighlightCard(id) {
+            const targetCard = document.getElementById(`card-${id}`);
+            if (!targetCard) return;
+
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            targetCard.classList.add('highlighted-card');
+            setTimeout(() => {
+                targetCard.classList.remove('highlighted-card');
+            }, 2500);
+        }
+
+        function addSingleToGoogleCalendar(name, day, month, year) {
+            const currentYear = new Date().getFullYear();
+            const pad = (num) => String(num).padStart(2, '0');
+            const targetMonth = pad(parseInt(month) + 1);
+            const targetDay = pad(day);
+            
+            const startDate = `${currentYear}${targetMonth}${targetDay}`;
+            const endDate = `${currentYear}${targetMonth}${pad(parseInt(day) + 1)}`;
+            
+            const title = encodeURIComponent(`🎂 ${name}'s Birthday`);
+            const details = encodeURIComponent(`Automated recurrence reminder generated by E-Kukurei BirthdayList application.`);
+            
+            const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}&recur=RRULE:FREQ=YEARLY&sf=true&output=xml`;
+            
+            window.open(gCalUrl, '_blank');
+        }
+
+        function exportAllToGoogleCalendar() {
+            if (birthdays.length === 0) {
+                showCustomModal("📭 Empty List", "You don't have any saved names to export yet.", "alert");
+                return;
+            }
+            showCustomModal(
+                "📅 Export All", 
+                `This will open automated calendar tabs to inject all ${birthdays.length} birthday event logs to your calendar layout. Proceed?`, 
+                'confirm', 
+                () => {
+                    birthdays.forEach(item => {
+                        addSingleToGoogleCalendar(item.name, item.dateObj.day, item.dateObj.month, item.dateObj.year);
+                    });
+                }
+            );
+        }
+
+        function backupDataToCloud() {
+            if (birthdays.length === 0) {
+                showCustomModal("📭 Empty List", "There is no data to back up right now.", "alert");
+                return;
+            }
+            
+            try {
+                const dataStr = localStorage.getItem('birthdays');
+                const file = new File([dataStr], 'birthday-list-backup.json', { type: 'application/json' });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        files: [file],
+                        title: 'BirthdayList Offline Backup',
+                        text: 'Offline JSON backup for your BirthdayList layout system.'
+                    }).catch(() => {});
+                } else {
+                    const blob = new Blob([dataStr], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "birthday-list-backup.json";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showCustomModal("💾 Downloaded", "Backup file downloaded to local storage. Save this to any secure drive container.", "alert");
+                }
+            } catch (err) {
+                showCustomModal("❌ Backup Error", "Your browser setup encountered a file parsing error.", "alert");
+            }
+        }
+
+        function triggerOfflineImport() {
+            document.getElementById('importFileInput').click();
+        }
+
+        function handleOfflineImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(parsedData)) throw new Error("Format is not a valid list structural array.");
+
+                    let itemsAdded = 0;
+                    parsedData.forEach(incomingItem => {
+                        if (incomingItem.name && incomingItem.dateObj && incomingItem.dateObj.day !== undefined) {
+                            if (!birthdays.some(existing => existing.id === incomingItem.id || (existing.name === incomingItem.name && existing.dateObj.day === incomingItem.dateObj.day && existing.dateObj.month === incomingItem.dateObj.month))) {
+                                birthdays.push({
+                                    id: incomingItem.id || Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                                    name: incomingItem.name,
+                                    dateObj: incomingItem.dateObj,
+                                    photo: incomingItem.photo || ""
+                                });
+                                itemsAdded++;
+                            }
+                        }
+                    });
+
+                    localStorage.setItem('birthdays', JSON.stringify(birthdays));
+                    renderList();
+                    showCustomModal("📥 Import Successful", `Import loop complete! Successfully merged ${itemsAdded} new birthday records into your active array storage list.`, "alert");
+                } catch (err) {
+                    showCustomModal("❌ Import Failed", "The selected backup file format structure is corrupt or invalid.", "alert");
+                }
+                event.target.value = ''; 
+            };
+            reader.readAsText(file);
         }
 
         function initDropdowns() {
@@ -549,53 +962,6 @@
             if (savedSelectedDay && parseInt(savedSelectedDay) <= daysInMonth) {
                 dSel.value = savedSelectedDay;
             }
-        }
-
-        function showCustomModal(title, message, type, onConfirm, onCancel = null) {
-            document.getElementById('mTitle').innerText = title;
-            document.getElementById('mBody').innerText = message;
-            const actionsBox = document.getElementById('mActions');
-            actionsBox.innerHTML = '';
-
-            if (type === 'alert') {
-                const okBtn = document.createElement('button');
-                okBtn.className = 'modal-btn primary';
-                okBtn.innerText = 'OK';
-                okBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
-                actionsBox.appendChild(okBtn);
-            } else if (type === 'confirm') {
-                const noBtn = document.createElement('button');
-                noBtn.className = 'modal-btn secondary';
-                noBtn.innerText = 'No';
-                noBtn.onclick = () => { closeModal(); if(onCancel) onCancel(); };
-                
-                const yesBtn = document.createElement('button');
-                yesBtn.className = 'modal-btn primary';
-                yesBtn.innerText = 'Yes';
-                yesBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
-                
-                actionsBox.appendChild(noBtn);
-                actionsBox.appendChild(yesBtn);
-            } else if (type === 'danger-confirm') {
-                const cancelBtn = document.createElement('button');
-                cancelBtn.className = 'modal-btn secondary';
-                cancelBtn.innerText = 'Cancel';
-                cancelBtn.onclick = () => { closeModal(); };
-                
-                const delBtn = document.createElement('button');
-                delBtn.className = 'modal-btn danger';
-                delBtn.innerText = 'Delete';
-                delBtn.onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
-                
-                actionsBox.appendChild(cancelBtn);
-                actionsBox.appendChild(delBtn);
-            }
-
-            document.getElementById('customModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('customModal').classList.remove('active');
         }
 
         function handleFileSelect(event) {
@@ -727,46 +1093,47 @@
         function renderList() {
             const listContainer = document.getElementById('birthdayList');
             listContainer.innerHTML = '';
+            
+            document.getElementById('totalCount').innerText = `Count: ${birthdays.length}`;
 
-            if (!birthdays || birthdays.length === 0) {
-                listContainer.innerHTML = '<div class="empty-state">No birthdays added yet.</div>';
+            if (birthdays.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No birthdays saved yet. Add one above!</div>';
                 return;
             }
 
-            const processedList = birthdays.map(b => {
-                return { 
-                    ...b, 
-                    daysRemaining: isToday(b.dateObj) ? 0 : calculateCountdown(b.dateObj),
-                    age: calculateAge(b.dateObj)
-                };
-            });
+            let displayList = [...birthdays];
+            displayList.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
 
-            processedList.sort((a, b) => a.daysRemaining - b.daysRemaining);
-
-            processedList.forEach(item => {
+            displayList.forEach((item, index) => {
                 const formattedDate = `${monthNames[parseInt(item.dateObj.month)]} ${item.dateObj.day}, ${item.dateObj.year}`;
                 const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
+                
+                const daysRemaining = isToday(item.dateObj) ? 0 : calculateCountdown(item.dateObj);
+                const currentAge = calculateAge(item.dateObj);
 
-                let badgeHTML = item.daysRemaining === 0 
+                let badgeHTML = daysRemaining === 0 
                     ? `<span class="countdown-badge today">Today! 🥳</span>` 
-                    : `<span class="countdown-badge">${item.daysRemaining} days left</span>`;
+                    : `<span class="countdown-badge">${daysRemaining} days left</span>`;
 
                 const safeName = item.name.replace(/'/g, "\\'");
 
                 const itemHTML = `
-                    <div class="birthday-item">
-                        <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
-                        <div class="item-info">
+                    <div class="birthday-item" id="card-${item.id}">
+                        <div class="card-top">
+                            <div class="index-badge">#${index + 1}</div>
+                            <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
                             <h4>${item.name}</h4>
-                            <p>${formattedDate} • Age: ${item.age}</p>
                         </div>
-                        <div class="right-actions">
-                            ${badgeHTML}
-                            <div class="btn-row">
-                                <button class="share-btn" onclick="launchNativeShare('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})">Share</button>
-                                <button class="edit-btn" onclick="editBirthday('${item.id}')">✏️</button>
-                                <button class="delete-btn" onclick="promptDelete('${item.id}')">🗑️</button>
-                            </div>
+                        
+                        <div class="card-middle">
+                            <p>${formattedDate} • Age: ${currentAge} ${badgeHTML}</p>
+                        </div>
+                        
+                        <div class="card-bottom">
+                            <button class="share-btn" onclick="launchNativeShare('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})">Share</button>
+                            <button class="cal-btn" onclick="addSingleToGoogleCalendar('${safeName}', ${item.dateObj.day}, ${item.dateObj.month}, ${item.dateObj.year})" title="Sync to Calendar">📅</button>
+                            <button class="edit-btn" onclick="editBirthday('${item.id}')">✏️</button>
+                            <button class="delete-btn" onclick="promptDelete('${item.id}')">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -807,14 +1174,6 @@
             localStorage.setItem('birthdays', JSON.stringify(birthdays));
             resetFormState();
             renderList();
-        }
-
-        function toggleTheme() {
-            const body = document.body;
-            const btn = document.getElementById('themeToggle');
-            body.classList.toggle('light-mode');
-            localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
-            btn.innerText = body.classList.contains('light-mode') ? '☀️' : '🌙';
         }
 
         if(localStorage.getItem('theme') === 'light') {
