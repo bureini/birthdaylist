@@ -777,6 +777,7 @@
             }
 
             let matches = birthdays.filter(item => item.name.toLowerCase().includes(searchVal));
+            
             matches.sort((a, b) => isToday(a.dateObj) ? -1 : isToday(b.dateObj) ? 1 : calculateCountdown(a.dateObj) - calculateCountdown(b.dateObj));
 
             dropdown.innerHTML = '';
@@ -910,11 +911,15 @@
                     let itemsAdded = 0;
                     parsedData.forEach(incomingItem => {
                         if (incomingItem.name && incomingItem.dateObj && incomingItem.dateObj.day !== undefined) {
-                            if (!birthdays.some(existing => existing.id === incomingItem.id || (existing.name === incomingItem.name && existing.dateObj.day === incomingItem.dateObj.day && existing.dateObj.month === incomingItem.dateObj.month))) {
+                            if (!birthdays.some(existing => existing.id === incomingItem.id || (existing.name === incomingItem.name && parseInt(existing.dateObj.day) === parseInt(incomingItem.dateObj.day) && parseInt(existing.dateObj.month) === parseInt(incomingItem.dateObj.month)))) {
                                 birthdays.push({
                                     id: incomingItem.id || Date.now().toString() + Math.random().toString(36).substr(2, 5),
                                     name: incomingItem.name,
-                                    dateObj: incomingItem.dateObj,
+                                    dateObj: {
+                                        day: parseInt(incomingItem.dateObj.day),
+                                        month: parseInt(incomingItem.dateObj.month),
+                                        year: parseInt(incomingItem.dateObj.year)
+                                    },
                                     photo: incomingItem.photo || ""
                                 });
                                 itemsAdded++;
@@ -925,6 +930,7 @@
                     localStorage.setItem('birthdays', JSON.stringify(birthdays));
                     renderList();
                     showCustomModal("📥 Import Successful", `Import loop complete! Successfully merged ${itemsAdded} new birthday records into your active array storage list.`, "alert");
+                    checkAndNotifyAndroidBirthdays();
                 } catch (err) {
                     showCustomModal("❌ Import Failed", "The selected backup file format structure is corrupt or invalid.", "alert");
                 }
@@ -992,7 +998,7 @@
             }
 
             const timeDiff = nextBirthday.getTime() - today.getTime();
-            return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            return Math.round(timeDiff / (1000 * 60 * 60 * 24)); 
         }
 
         function calculateAge(dateObj) {
@@ -1097,7 +1103,7 @@
         }
 
         function checkAndNotifyAndroidBirthdays() {
-            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isAndroid = /Android/i.test(navigator.userAgent) || /Linux; U; Android/i.test(navigator.userAgent);
             if (!isAndroid) return;
 
             if (!("Notification" in window)) return;
@@ -1132,7 +1138,7 @@
                     new Notification(title, {
                         body: body,
                         icon: (item.photo && item.photo.length > 10) ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name),
-                        tag: `bday-${item.id}`
+                        tag: `bday-${item.id}-${daysRemaining}`
                     });
                 }
             });
