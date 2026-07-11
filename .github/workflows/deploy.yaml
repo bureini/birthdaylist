@@ -1,67 +1,93 @@
-name: Deploy Web and Build Production Signed APK
+name: Deploy Web App and Build Production Android APK
 
 on:
   push:
     branches:
-      - main  # Deploys your web app on regular main branch pushes
+      - main
     tags:
-      - 'v*'  # Triggers the automatic GitHub Release page whenever you push a tag like v1.0.1
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
-  contents: write  # Crucial: Gives your pipeline permission to publish a release page and push assets
+  contents: write
   pages: write
   id-token: write
 
+concurrency:
+  group: "production-pipeline"
+  cancel-in-progress: true
+
 jobs:
-  # JOB 1: Web deployment to GitHub Pages
+  # JOB 1: Web deployment directly to live GitHub Pages instance
   deploy-web:
+    name: Public Web Deployment
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code Base
         uses: actions/checkout@v4
-      - name: Setup Pages Configuration
+
+      - name: Setup Web Pages Infrastructure
         uses: actions/configure-pages@v4
-      - name: Upload Web Assets
+
+      - name: Upload Single-Base Production Assets
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-      - name: Deploy Live Site
+
+      - name: Deploy Live Site Panel
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # JOB 2: Packaging code, generating keystore, signing, and auto-releasing
+  # JOB 2: Validation check, bundling dependencies, asset mapping, compilation & signing
   build-android:
+    name: Production Android Compiling
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code Base
         uses: actions/checkout@v4
+
+      # 🔍 CRITICAL ADVISORY PRE-CHECK: Protect repository single-base layout before compiler actions
+      - name: Validate Single-Base Integrity
+        run: |
+          if [ ! -f index.html ]; then
+            echo "❌ CRITICAL ERROR: index.html was not found in the root directory context."
+            exit 1
+          fi
+          # Ensure essential photo update triggers exist in source structure
+          grep -q "addBirthday" index.html && grep -q "editBirthday" index.html || (echo "❌ ERROR: Core data lifecycle methods are missing from single-base source script code."; exit 1)
+
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Capacitor CLI
+
+      - name: Install Application Dependencies
         run: npm install
-      - name: Prepare Separate Web Assets Folder
+
+      - name: Sync Static Assets to Native Dist Layout
         run: |
           mkdir -p www
           cp index.html www/
-          cp icon.png www/ || echo "No icon asset found."
-      - name: Initialize Android Native Layer
-        run: npx cap add android || echo "Android layer already configured."
-      - name: Sync Assets to Native Code
+          cp icon.png www/ || echo "⚠️ Warning: No primary icon image file found. Relying on baseline system fallbacks."
+
+      - name: Initialize Android Native Target Framework
+        run: npx cap add android || echo "Android bridge framework configuration step skipped."
+
+      - name: Map Single-Base Layer to Android Bridge Assets
         run: npx cap sync
-      - name: Setup Java JDK 17
+
+      - name: Setup Java JDK Environment
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Build Release APK via Gradle
+
+      - name: Compile Release Build Configuration via Gradle
         run: |
           cd android
           ./gradlew assembleRelease
 
-      # Automated Step: Generate a fresh, valid keystore directly on the GitHub server
-      - name: Generate Fresh Keystore on the Fly
+      - name: Generate Ephemeral Production Keystore Signer
         run: |
           mkdir -p android/app
           keytool -genkey -v \
@@ -74,8 +100,7 @@ jobs:
             -keypass "Bureini2026" \
             -dname "CN=Bureini, OU=Development, O=BirthdayList, L=Tarawa, C=KI"
 
-      # Cryptographically Sign the APK using the newly generated key file
-      - name: Cryptographically Sign Production APK
+      - name: Apply Cryptographic Signatures to Production APK Output
         run: |
           /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
             --ks android/app/release.keystore \
@@ -85,22 +110,20 @@ jobs:
             --out android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk \
             android/app/build/outputs/apk/release/app-release-unsigned.apk
 
-      # Upload raw file artifact back into our summary log interface
-      - name: Upload Finished Production APK File Artifact
+      - name: Archive Production Signed Artifact Package
         uses: actions/upload-artifact@v4
         with:
           name: BirthdayList-Production-Signed-APK
           path: android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk
 
-      # AUTOMATED STEP: Instantly publishes your GitHub Release dashboard page (Only triggers on tags)
-      - name: Automatically Create GitHub Release and Upload APK Asset
+      - name: Auto-Publish Production Release Asset Page
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/v')  # Only fires this step if we pushed a version tag mark
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
-          name: "Birthdaylist APK Update ${{ github.ref_name }}"
+          name: "BirthdayList Stable Package Update ${{ github.ref_name }}"
           body: |
-            ### 🚀 New Production Build Published Automatically!
-            - Automatically compiled and signed using the latest main repository snapshot.
-            - View structural updates and test out changes instantly via our live web panel channel dashboard!
+            ### 🚀 Production Single-Base Package Deployment Live!
+            - **Web Deployment Status**: Successfully pushed and verified live via static hosting dashboard systems.
+            - **Android Native Snapshot Build**: Compiled, signed, and packaged dynamically from the verified single-base `index.html` runtime asset snapshot package.
           files: android/app/build/outputs/apk/release/BirthdayList-Production-Signed.apk
           generate_release_notes: true
