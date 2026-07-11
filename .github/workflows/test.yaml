@@ -53,18 +53,23 @@ jobs:
               })
             };
 
+            // FIX: Add a mocked navigator object so Android userAgent checks don't crash Node.js
+            const mockNavigator = {
+              userAgent: 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+            };
+
             // 2. Create an isolated evaluation sandbox context (binding methods to 'this')
             const scriptToRun = scriptBlock[1] + '\n' + 
               'this.calculateCountdown = calculateCountdown;\n' +
               'this.calculateAge = calculateAge;\n' +
               'this.isToday = isToday;';
             
-            // 3. Compile and execute inside a dedicated context binder
-            const runner = new Function('localStorage', 'document', 'window', 'fetch', scriptToRun);
+            // 3. Compile and execute inside a dedicated context binder, including navigator
+            const runner = new Function('localStorage', 'document', 'window', 'navigator', 'fetch', scriptToRun);
             const contextScope = {};
             
-            // Run the script using contextScope as 'this'
-            runner.call(contextScope, mockLocalStorage, mockDocument, {}, () => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }));
+            // Run the script using contextScope as 'this' and pass down the mockNavigator parameter
+            runner.call(contextScope, mockLocalStorage, mockDocument, {}, mockNavigator, () => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }));
 
             const { calculateCountdown, calculateAge } = contextScope;
             
