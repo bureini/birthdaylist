@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BirthdayList</title>
+    <title>BirthdayList Pro</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -343,7 +343,6 @@
             margin-bottom: 40px;
         }
 
-        /* THREE-ZONE STRATIFIED LIST ITEM DESIGN */
         .birthday-item {
             background-color: var(--card-bg);
             padding: 16px;
@@ -361,7 +360,6 @@
             border: 1px solid var(--accent);
         }
 
-        /* Top Row Container: Number, Photo, FullName */
         .card-top {
             display: flex;
             align-items: center;
@@ -403,7 +401,6 @@
             overflow-wrap: break-word;
         }
 
-        /* Middle Area Container: Birthday Date - Age & Status */
         .card-middle {
             display: flex;
             flex-direction: column;
@@ -438,7 +435,6 @@
             animation: pulse 2s infinite;
         }
 
-        /* Bottom Row Actions Container: Icon Buttons */
         .card-bottom {
             display: flex;
             justify-content: flex-start;
@@ -790,10 +786,10 @@
                 matches.forEach(item => {
                     const btn = document.createElement('button');
                     btn.className = 'search-dropdown-item';
-                    const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
+                    const userPhoto = (item.photo && item.photo.length > 10) ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
                     
                     btn.innerHTML = `
-                        <img src="${userPhoto}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
+                        <img src="${userPhoto}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}';">
                         <span>${item.name}</span>
                     `;
                     btn.onclick = (e) => {
@@ -1054,7 +1050,7 @@
             document.getElementById('birthDay').value = item.dateObj.day;
             document.getElementById('birthYear').value = item.dateObj.year;
             
-            if (item.photo) {
+            if (item.photo && item.photo.length > 10) {
                 currentBase64Image = item.photo;
                 document.getElementById('fileInfo').style.display = 'block';
             } else {
@@ -1100,6 +1096,48 @@
             subBtn.classList.remove('edit-mode-active');
         }
 
+        function checkAndNotifyAndroidBirthdays() {
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            if (!isAndroid) return;
+
+            if (!("Notification" in window)) return;
+            
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        processNotificationSweep();
+                    }
+                });
+            } else if (Notification.permission === "granted") {
+                processNotificationSweep();
+            }
+        }
+
+        function processNotificationSweep() {
+            birthdays.forEach(item => {
+                const daysRemaining = isToday(item.dateObj) ? 0 : calculateCountdown(item.dateObj);
+                
+                if (daysRemaining === 0 || daysRemaining === 1) {
+                    let title = "";
+                    let body = "";
+
+                    if (daysRemaining === 0) {
+                        title = `🎉 Birthday Today: ${item.name}!`;
+                        body = `Don't forget to send your best wishes to ${item.name} today!`;
+                    } else {
+                        title = `⏳ Birthday Tomorrow: ${item.name}!`;
+                        body = `${item.name}'s birthday is coming up tomorrow. Get ready!`;
+                    }
+
+                    new Notification(title, {
+                        body: body,
+                        icon: (item.photo && item.photo.length > 10) ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name),
+                        tag: `bday-${item.id}`
+                    });
+                }
+            });
+        }
+
         function renderList() {
             const listContainer = document.getElementById('birthdayList');
             listContainer.innerHTML = '';
@@ -1113,7 +1151,6 @@
 
             let displayList = [...birthdays];
             
-            // Sort by nearest upcoming birthday date (ascending countdown)
             displayList.sort((a, b) => {
                 if (isToday(a.dateObj)) return -1;
                 if (isToday(b.dateObj)) return 1;
@@ -1122,7 +1159,7 @@
 
             displayList.forEach((item, index) => {
                 const formattedDate = `${monthNames[parseInt(item.dateObj.month)]} ${item.dateObj.day}, ${item.dateObj.year}`;
-                const userPhoto = item.photo && item.photo.trim() !== "" ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
+                const userPhoto = (item.photo && item.photo.length > 10) ? item.photo : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(item.name);
                 
                 const daysRemaining = isToday(item.dateObj) ? 0 : calculateCountdown(item.dateObj);
                 const currentAge = calculateAge(item.dateObj);
@@ -1137,7 +1174,7 @@
                     <div class="birthday-item" id="card-${item.id}">
                         <div class="card-top">
                             <div class="index-badge">#${index + 1}</div>
-                            <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}'">
+                            <img src="${userPhoto}" class="avatar-frame" alt="User Image" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.name)}';">
                             <h4>${item.name}</h4>
                         </div>
                         
@@ -1190,6 +1227,7 @@
             localStorage.setItem('birthdays', JSON.stringify(birthdays));
             resetFormState();
             renderList();
+            checkAndNotifyAndroidBirthdays();
         }
 
         if(localStorage.getItem('theme') === 'light') {
@@ -1200,6 +1238,7 @@
         initDropdowns();
         renderList();
         fetchLatestAppVersion();
+        checkAndNotifyAndroidBirthdays();
     </script>
 </body>
 </html>
