@@ -20,3 +20,5 @@ When installing the custom APK file directly from your mobile browser, you will 
 1. When the block notification box appears, **do not** click the main blue OK button.
 2. Tap the small text link right above it that reads **"Install anyway"**.
 3. The application will finish unpacking and launch seamlessly!
+# Hello from Termux
+Testing Termux CLI
